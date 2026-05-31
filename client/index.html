@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>إنسان · حيوان · جماد</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Lalezar&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+<div class="grain"></div>
+<div id="flash"></div>
+<div class="encourage" id="encourage"></div>
+<canvas id="cft"></canvas>
+
+<div class="app">
+  <div class="topbar">
+    <div class="logo"><span class="dot"></span>إنسان · حيوان · جماد</div>
+    <button class="icon-btn" id="soundBtn" title="الصوت">🔊</button>
+  </div>
+
+  <!-- HOME -->
+  <section class="screen active" id="s-home">
+    <div class="hero stagger">
+      <div class="badge">أ</div>
+      <h1>لعبة الحروف <span>بأسلوب جديد</span></h1>
+      <p>العبوا معاً على شاشة واحدة، أو اعرضوها على التلفاز وانضمّوا من هواتفكم بمسح رمز QR.</p>
+      <div class="mode-list" style="margin-top:6px">
+        <button class="modecard feat" onclick="hostStart()">
+          <span class="em">📺</span><span class="tx"><b>اعرض على التلفاز</b><span>اللاعبون ينضمّون بمسح QR من هواتفهم</span></span><span class="ar">←</span>
+        </button>
+        <button class="modecard" onclick="go('s-setup')">
+          <span class="em">👥</span><span class="tx"><b>على هذا الجهاز</b><span>فِرق بالتناوب أو تدريب فردي</span></span><span class="ar">←</span>
+        </button>
+        <button class="modecard" onclick="go('s-join')">
+          <span class="em">📱</span><span class="tx"><b>انضمام برمز</b><span>أدخل رمز الغرفة يدوياً</span></span><span class="ar">←</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== LOCAL SETUP ===== -->
+  <section class="screen" id="s-setup">
+    <div class="stagger" style="display:flex;flex-direction:column;gap:16px;flex:1">
+      <div class="row">
+        <button class="icon-btn" onclick="go('s-home')">→</button>
+        <div class="logo" style="font-size:20px">إعداد اللعب المحلي</div><div style="width:42px"></div>
+      </div>
+      <div class="card">
+        <span class="label">نمط اللعب</span>
+        <div class="mode-grid">
+          <div class="mode on" id="mode-team" onclick="setMode('team')"><span class="em">👥</span><div class="t">فِرق ولاعبون</div><div class="d">تنافس بالتناوب</div></div>
+          <div class="mode" id="mode-solo" onclick="setMode('solo')"><span class="em">🧠</span><div class="t">تدريب فردي</div><div class="d">تحدَّ الوقت</div></div>
+        </div>
+      </div>
+      <div class="card" id="playersCard">
+        <span class="label">اللاعبون</span>
+        <div class="players-list" id="playersList"></div>
+        <div class="spacer"></div>
+        <button class="btn ghost sm" id="addPlayer" onclick="addPlayer()" style="width:100%">＋ إضافة لاعب</button>
+      </div>
+      <div class="card">
+        <div class="row" style="margin-bottom:16px"><span class="label" style="margin:0">عدد الجولات</span>
+          <div class="stepper"><button onclick="bumpRounds(-1)">−</button><b id="roundsVal">3</b><button onclick="bumpRounds(1)">＋</button></div></div>
+        <span class="label">مدة كل جولة</span>
+        <div class="seg" id="timeSeg"><button data-t="30">٣٠ ثانية</button><button class="on" data-t="60">دقيقة</button><button data-t="90">دقيقة ونصف</button><button data-t="0">بلا مؤقّت</button></div>
+      </div>
+      <div class="card"><span class="label">الفئات</span><div class="cat-grid" id="catGrid"></div></div>
+      <button class="btn teal" onclick="startLocal()">يلّا نلعب 🎮</button>
+    </div>
+  </section>
+
+  <!-- ===== HOST LOBBY (TV) ===== -->
+  <section class="screen" id="s-lobby">
+    <div class="stagger" style="display:flex;flex-direction:column;gap:16px;flex:1">
+      <div class="row">
+        <button class="icon-btn" onclick="leaveNet('s-home')">→</button>
+        <div class="logo" style="font-size:20px">غرفة اللعب</div>
+        <button class="icon-btn" id="hostSettings" onclick="go('s-hostcfg')" title="إعدادات">⚙️</button>
+      </div>
+      <div class="lobby-grid">
+        <div class="card qr-card">
+          <span class="label">امسح للانضمام</span>
+          <div class="qrbox" id="qrbox"></div>
+          <div class="code" id="roomCode">····</div>
+          <div class="status" style="justify-content:center;margin-top:8px" id="hostStatus"><span class="dotpulse wait"></span><span>جارِ تجهيز الغرفة…</span></div>
+          <div class="hint" id="joinUrlHint" style="word-break:break-all"></div>
+        </div>
+        <div class="card joined">
+          <span class="label">اللاعبون المنضمّون (<span id="joinCount">٠</span>)</span>
+          <div class="pchips" id="lobbyPlayers"><div class="hint">في انتظار انضمام اللاعبين…</div></div>
+          <div class="spacer"></div>
+          <button class="btn" id="hostStartBtn" onclick="hostBeginGame()" disabled>ابدأ اللعبة 🎮</button>
+          <div class="hint">يلزم لاعب واحد على الأقل للبدء.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOST CONFIG -->
+  <section class="screen" id="s-hostcfg">
+    <div class="stagger" style="display:flex;flex-direction:column;gap:16px;flex:1">
+      <div class="row"><button class="icon-btn" onclick="go('s-lobby')">→</button><div class="logo" style="font-size:20px">إعدادات الغرفة</div><div style="width:42px"></div></div>
+      <div class="card">
+        <div class="row" style="margin-bottom:16px"><span class="label" style="margin:0">عدد الجولات</span>
+          <div class="stepper"><button onclick="bumpRounds(-1)">−</button><b id="roundsVal2">3</b><button onclick="bumpRounds(1)">＋</button></div></div>
+        <span class="label">مدة كل جولة</span>
+        <div class="seg" id="timeSeg2"><button data-t="45">٤٥ ثانية</button><button class="on" data-t="60">دقيقة</button><button data-t="90">دقيقة ونصف</button><button data-t="120">دقيقتان</button></div>
+      </div>
+      <div class="card"><span class="label">الفئات</span><div class="cat-grid" id="catGrid2"></div></div>
+      <button class="btn teal" onclick="go('s-lobby')">حفظ والرجوع ✓</button>
+    </div>
+  </section>
+
+  <!-- ===== JOIN (phone) ===== -->
+  <section class="screen" id="s-join">
+    <div class="stagger" style="display:flex;flex-direction:column;gap:16px;flex:1;justify-content:center">
+      <div class="row"><button class="icon-btn" onclick="go('s-home')">→</button><div class="logo" style="font-size:20px">انضمام للعبة</div><div style="width:42px"></div></div>
+      <div class="hero" style="flex:0"><div class="badge" style="font-size:64px">📱</div></div>
+      <div class="card">
+        <span class="label">رمز الغرفة</span>
+        <input class="txt" id="joinCode" placeholder="مثال: K7QM" maxlength="5" style="text-transform:uppercase;text-align:center;letter-spacing:6px;font-size:24px;font-family:Lalezar">
+        <div class="spacer"></div>
+        <span class="label">اسمك</span>
+        <input class="txt" id="joinName" placeholder="اكتب اسمك" maxlength="14">
+        <div class="spacer"></div>
+        <button class="btn" onclick="joinRoom()">دخول الغرفة ✦</button>
+        <div class="status" id="joinStatus" style="justify-content:center;margin-top:12px"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PLAYER WAITING -->
+  <section class="screen" id="s-pwait">
+    <div class="big-wait">
+      <div class="sp"></div>
+      <h2 id="pwaitTitle" style="margin:0;font-size:24px">أنت في الغرفة!</h2>
+      <p class="reveal-sub" id="pwaitSub">في انتظار أن يبدأ المضيف اللعبة…</p>
+      <div class="pchip" id="pwaitMe"></div>
+    </div>
+  </section>
+
+  <!-- ===== REVEAL (shared) ===== -->
+  <section class="screen" id="s-reveal">
+    <div class="reveal-wrap"><div class="reveal-sub" id="revealRound">الجولة ١</div><div id="revealStage"></div></div>
+  </section>
+
+  <!-- PASS DEVICE (local) -->
+  <section class="screen" id="s-pass">
+    <div class="pass-wrap">
+      <div class="reveal-sub">سلّم الجهاز إلى</div>
+      <div class="pass-av" id="passAv">🙂</div>
+      <h2 class="pn" id="passName">اللاعب</h2>
+      <div class="reveal-sub" id="passLetter">الحرف: أ</div>
+      <button class="btn" style="max-width:280px" onclick="beginTurn()">أنا جاهز ✦</button>
+    </div>
+  </section>
+
+  <!-- ===== PLAY (local + phone) ===== -->
+  <section class="screen" id="s-play">
+    <div class="play-head">
+      <div class="miniL"><div class="disc" id="playLetter">أ</div><div><small id="playWho">اللاعب</small><b id="playRound">الجولة ١</b></div></div>
+      <div class="timer" id="timerWrap">
+        <svg width="64" height="64"><circle cx="32" cy="32" r="28" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="6"/>
+        <circle id="timerArc" cx="32" cy="32" r="28" fill="none" stroke="url(#tg)" stroke-width="6" stroke-linecap="round" stroke-dasharray="175.9" stroke-dashoffset="0"/>
+        <defs><linearGradient id="tg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3ec8ff"/><stop offset="1" stop-color="#22d3c5"/></linearGradient></defs></svg>
+        <div class="num" id="timerNum">60</div>
+      </div>
+    </div>
+    <div class="fields" id="playFields"></div>
+    <div class="spacer"></div>
+    <button class="btn" id="doneBtn" onclick="onDone()">انتهيت ✓</button>
+  </section>
+
+  <!-- ===== HOST PLAY (TV) ===== -->
+  <section class="screen" id="s-tvplay">
+    <div class="reveal-wrap">
+      <div class="play-head" style="width:100%;max-width:520px">
+        <div class="miniL"><div class="disc" id="tvLetter">أ</div><div><small id="tvRoundS">الجولة ١</small><b>اكتبوا على هواتفكم</b></div></div>
+        <div class="timer" id="tvTimerWrap">
+          <svg width="64" height="64"><circle cx="32" cy="32" r="28" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="6"/>
+          <circle id="tvArc" cx="32" cy="32" r="28" fill="none" stroke="url(#tg)" stroke-width="6" stroke-linecap="round" stroke-dasharray="175.9" stroke-dashoffset="0"/></svg>
+          <div class="num" id="tvNum">60</div>
+        </div>
+      </div>
+      <div class="letter-disc" style="margin-top:10px"><div class="L" id="tvBigLetter">أ</div></div>
+      <div class="reveal-sub">من سلّم إجابته</div>
+      <div class="submit-state" id="tvSubmit"></div>
+    </div>
+  </section>
+
+  <!-- PLAYER SUBMITTED WAIT -->
+  <section class="screen" id="s-psent">
+    <div class="big-wait">
+      <div class="win-em">✅</div>
+      <h2 style="margin:0;font-size:24px">تم استلام إجاباتك</h2>
+      <p class="reveal-sub">في انتظار بقية اللاعبين والنتيجة على الشاشة…</p>
+    </div>
+  </section>
+
+  <!-- ===== SCORING ===== -->
+  <section class="screen" id="s-score">
+    <div class="stagger" style="display:flex;flex-direction:column;flex:1">
+      <div class="row" style="margin-bottom:14px"><div class="miniL"><div class="disc" id="scoreLetter" style="width:46px;height:46px;font-size:28px">أ</div><div><small>نتيجة الجولة</small><b id="scoreRound">الجولة ١</b></div></div></div>
+      <div id="scoreBody"></div>
+      <div class="hint" id="scoreHint">١٠ لإجابة فريدة · ٥ إذا تكررت · ٠ إذا خاطئة.</div>
+      <div class="spacer"></div>
+      <button class="btn teal" id="nextRoundBtn" onclick="onNextRound()">الجولة التالية ←</button>
+    </div>
+  </section>
+
+  <!-- PLAYER ROUND SCORE -->
+  <section class="screen" id="s-pscore">
+    <div class="big-wait">
+      <div class="reveal-sub">نتيجتك هذه الجولة</div>
+      <div class="win-name" id="pRoundPts" style="margin:0">+٠</div>
+      <div class="reveal-sub">مجموعك: <b id="pTotal" style="color:var(--ink)">٠</b> · ترتيبك <b id="pRank" style="color:var(--ink)">-</b></div>
+      <p class="reveal-sub">انظر إلى الشاشة 👀</p>
+    </div>
+  </section>
+
+  <!-- ===== RESULTS ===== -->
+  <section class="screen" id="s-results">
+    <div class="stagger" style="display:flex;flex-direction:column;flex:1;justify-content:center">
+      <div class="win-em" id="winEm">🏆</div>
+      <div class="win-title">الفائز</div>
+      <div class="win-name" id="winName">—</div>
+      <div class="lead" id="finalLead"></div>
+      <div class="spacer"></div>
+      <div class="btn-row" id="resultBtns">
+        <button class="btn ghost" style="flex:1" onclick="shareResult()">📤 مشاركة</button>
+        <button class="btn" style="flex:1" id="againBtn" onclick="onPlayAgain()">↻ مرة أخرى</button>
+      </div>
+      <button class="btn ghost sm" style="margin-top:10px" onclick="leaveNet('s-home')">القائمة الرئيسية</button>
+    </div>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
