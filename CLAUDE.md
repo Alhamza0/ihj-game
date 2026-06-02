@@ -71,7 +71,16 @@ client/         واجهة Vite (vanilla JS modules) — تحافظ على نف�
 ### إعدادات النشر
 - Render: Web Service · Root Directory `server` · Build `npm install` · Start `npm start`
 - Vercel: Build `npm run build` · Output `client/dist` · متغير `VITE_SERVER_URL=https://ihj-game.onrender.com`
-- Auto-deploy مفعّل: أي push على `main` يعيد النشر تلقائياً على المنصتين.
+
+### ⚠️ النشر اليدوي (لا يوجد ربط Git تلقائي بعد)
+المستودع **غير مربوط** بـ Vercel/Render عبر GitHub (لا webhooks)، فالدفع إلى `main` **لا** يُطلق نشراً.
+- **الواجهة (Vercel):** النشر يدوي عبر CLI من جذر المشروع (المشروع مربوط محلياً في `.vercel/`):
+  ```powershell
+  $env:NODE_OPTIONS="--use-system-ca"; vercel --prod --yes
+  ```
+  (متغيّر البيئة ضروري بسبب اعتراض TLS على هذا الجهاز.)
+- **الخادم (Render):** نادراً ما يتغيّر؛ أعِد نشره من لوحة Render («Manual Deploy») عند تغيّر `server/`.
+- **لتفعيل النشر التلقائي مستقبلاً:** اربط المستودع في لوحتَي Vercel و Render (انظر خطوات الربط في سجلّ المحادثة/README).
 
 ## الحالة وما تبقّى (آخر تحديث: 2026-06-02 — أُضيف دعم PWA وصمود الجوال)
 **تم بالكامل:**
