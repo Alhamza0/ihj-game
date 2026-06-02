@@ -1,6 +1,7 @@
 // ============================ answer fields ============================
 import { CATS, matchLetter } from "@ihj/shared";
 import { $ } from "./dom.js";
+import { catCreature } from "./art.js";
 
 // يبني حقول الإجابة للفئات المختارة، بحرف معيّن
 export function buildFields(letter, cats) {
@@ -9,7 +10,7 @@ export function buildFields(letter, cats) {
   CATS.filter(c => cats.includes(c.id)).forEach(c => {
     const f = document.createElement("div");
     f.className = "field";
-    f.innerHTML = `<span class="ic">${c.em}</span>` +
+    f.innerHTML = `<span class="ic creature">${catCreature(c.id)}</span>` +
       `<input class="txt" data-c="${c.id}" placeholder="${c.nm} يبدأ بحرف «${letter}»" autocomplete="off">` +
       `<span class="tag">${c.nm}</span>`;
     fields.appendChild(f);

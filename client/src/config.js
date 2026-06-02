@@ -1,6 +1,7 @@
 // ============================ game config (cats / rounds / time) ============================
 import { CATS } from "@ihj/shared";
 import { $, toAr, toast } from "./dom.js";
+import { catCreature } from "./art.js";
 
 export const CFG = {
   cats: CATS.filter(c => c.def).map(c => c.id),
@@ -40,7 +41,7 @@ export function renderCatGrid(id) {
     const on = CFG.cats.includes(c.id);
     const el = document.createElement("div");
     el.className = "cat" + (on ? " on" : "");
-    el.innerHTML = `<span class="em">${c.em}</span><span class="nm">${c.nm}</span><span class="tick">✓</span>`;
+    el.innerHTML = `<span class="em">${catCreature(c.id)}</span><span class="nm">${c.nm}</span><span class="tick">✓</span>`;
     el.onclick = () => {
       const idx = CFG.cats.indexOf(c.id);
       if (idx >= 0) {

@@ -3,6 +3,7 @@ import "./style.css";
 import { $, go, toast } from "./dom.js";
 import { wireSeg, renderCatGrid, syncConfigUI, bumpRounds } from "./config.js";
 import { toggleSound, unlockAudio } from "./sound.js";
+import { MASCOT, tile, star } from "./art.js";
 import * as local from "./local-game.js";
 import * as net from "./net.js";
 
@@ -34,6 +35,19 @@ async function shareResult() {
   try { await navigator.clipboard.writeText(txt); toast("نُسخت النتيجة! الصقها لمشاركتها"); } catch (e) { toast("النتيجة جاهزة"); }
 }
 
+// ---- home mascot scene (mascot + floating letter tiles & stars) ----
+(function buildMascotScene() {
+  const scene = $("#mascotScene");
+  if (!scene) return;
+  scene.innerHTML =
+    `<span class="deco d-star1">${star("#ffd23f")}</span>` +
+    `<span class="deco d-star2">${star("#23d6c6")}</span>` +
+    `<span class="deco d-tile1">${tile("أ", "#7b5cff")}</span>` +
+    `<span class="deco d-tile2">${tile("ح", "#3aa0ff")}</span>` +
+    `<span class="deco d-tile3">${tile("ج", "#ff8a3d")}</span>` +
+    `<div class="mascot-hold">${MASCOT}</div>`;
+})();
+
 // ---- init ----
 wireSeg("timeSeg");
 wireSeg("timeSeg2");
@@ -42,8 +56,11 @@ renderCatGrid("catGrid");
 renderCatGrid("catGrid2");
 syncConfigUI();
 
-// sound toggle
-$("#soundBtn").onclick = function () { this.textContent = toggleSound() ? "🔊" : "🔇"; };
+// sound toggle (swap custom SVG icon)
+$("#soundBtn").onclick = function () {
+  const on = toggleSound();
+  this.innerHTML = `<svg class="ic"><use href="#${on ? "ic-sound" : "ic-mute"}"/></svg>`;
+};
 // فتح الصوت عند أول لمسة
 window.addEventListener("pointerdown", () => unlockAudio(), { once: true });
 
