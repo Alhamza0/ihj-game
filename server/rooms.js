@@ -85,8 +85,11 @@ export class RoomManager {
     socket.emit("join:ok", { clientId, name: player.name, idx: player.idx, config: room.config });
     this.broadcastLobby(room);
 
-    // إذا انضم في منتصف اللعب: ينتظر الجولة القادمة
-    if (room.phase !== "lobby") socket.emit("phase:late");
+    // إذا انضم أثناء اللعب/التقييم/النتائج: ينتظر الجولة القادمة.
+    // الانضمام أثناء reveal مسموح ليشارك في نفس الجولة.
+    if (room.phase === "play" || room.phase === "score" || room.phase === "results") {
+      socket.emit("phase:late");
+    }
   }
 
   // ---------- lobby ----------
