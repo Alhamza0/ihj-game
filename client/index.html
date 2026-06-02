@@ -75,6 +75,11 @@
         <span class="tile-tx"><b>انضمام برمز</b><span>أدخل رمز الغرفة يدوياً</span></span>
       </button>
     </div>
+    <footer class="appfoot stagger">
+      <div class="credit" id="appCredit"></div>
+      <div class="copy" id="appCopy"></div>
+      <div class="ver" id="appVer"></div>
+    </footer>
   </section>
 
   <!-- ===== LOCAL SETUP ===== -->
@@ -275,6 +280,15 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- إشعار توفّر تحديث (PWA) -->
+<div class="update-bar hidden" id="updateBar">
+  <div class="ub-body">
+    <b id="updateTitle">🎉 نسخة جديدة متوفّرة</b>
+    <ul class="ub-notes" id="updateNotes"></ul>
+  </div>
+  <button class="btn sm" onclick="applyUpdate()"><svg class="ic"><use href="#ic-refresh"/></svg> حدّث الآن</button>
+</div>
 
 <script type="module" src="/src/main.js"></script>
 </body>

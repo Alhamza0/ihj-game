@@ -3,14 +3,20 @@
    لا نلمس طلبات Socket.IO إطلاقاً — تُمرَّر للشبكة دائماً.
    لا نعتمد على أسماء أصول Vite المُجزّأة: نكاش وقت التشغيل (runtime caching).
 */
-const CACHE_VERSION = "ihj-v1";
+// ⚠️ ارفع هذا الرقم مع كل إصدار (طابقه مع package.json) كي يكتشف المتصفح التحديث.
+const CACHE_VERSION = "ihj-v1.2.0";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon.svg", "./maskable.svg"];
 
 self.addEventListener("install", (e) => {
-  self.skipWaiting();
+  // لا نستدعي skipWaiting تلقائياً: ندع النسخة الجديدة "تنتظر" حتى يوافق المستخدم على التحديث.
   e.waitUntil(
     caches.open(CACHE_VERSION).then((c) => c.addAll(SHELL).catch(() => {}))
   );
+});
+
+// عند موافقة المستخدم على التحديث: الواجهة ترسل هذه الرسالة فيُفعَّل الـ SW الجديد فوراً.
+self.addEventListener("message", (e) => {
+  if (e.data && e.data.type === "SKIP_WAITING") self.skipWaiting();
 });
 
 self.addEventListener("activate", (e) => {
@@ -25,8 +31,9 @@ self.addEventListener("fetch", (e) => {
   const req = e.request;
   const url = new URL(req.url);
 
-  // مرّر كل ما هو ليس GET، وكل ما يخص Socket.IO/الـ WebSocket للشبكة مباشرة
-  if (req.method !== "GET" || url.pathname.startsWith("/socket.io/") || url.protocol === "ws:" || url.protocol === "wss:") {
+  // مرّر للشبكة مباشرة: غير GET، Socket.IO/WebSocket، وملف ملخّص التحديث (يجب أن يبقى طازجاً)
+  if (req.method !== "GET" || url.pathname.startsWith("/socket.io/") ||
+      url.protocol === "ws:" || url.protocol === "wss:" || url.pathname.endsWith("/version.json")) {
     return; // المتصفح يتولّاه عبر الشبكة
   }
 

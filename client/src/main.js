@@ -24,6 +24,7 @@ const routes = {
   onDone: () => (net.NET.active && net.NET.role === "player") ? net.playerDone() : local.endTurn(false),
   shareResult,
   installApp,
+  applyUpdate,
 };
 Object.assign(window, routes);
 
@@ -65,10 +66,66 @@ $("#soundBtn").onclick = function () {
 // فتح الصوت عند أول لمسة
 window.addEventListener("pointerdown", () => unlockAudio(), { once: true });
 
-// ---- PWA: تسجيل الـ service worker (إنتاج/HTTPS فقط، أو localhost للتجربة) ----
+// ---- رقم الإصدار (يُحقَن من package.json عبر Vite) + حقوق النشر ----
+const APP_VERSION = (typeof __APP_VERSION__ !== "undefined") ? __APP_VERSION__ : "";
+const OWNER = "حمزة إحسان علي";   // مصمم ومطوّر اللعبة وصاحب الحقوق
+if ($("#appCredit")) $("#appCredit").textContent = `تصميم وتطوير اللعبة — ${OWNER}`;
+if ($("#appCopy")) $("#appCopy").textContent = "© 2026 · جميع الحقوق محفوظة";
+if ($("#appVer")) $("#appVer").textContent = "إصدار " + APP_VERSION;
+
+// ---- PWA: تسجيل الـ service worker + كشف التحديثات ----
+let _swReg = null, _reloading = false;
+function showUpdate() {
+  const bar = $("#updateBar");
+  if (!bar) return;
+  // اجلب ملخّص التحديث من نسخة الخادم الجديدة (مع تجاوز الكاش)
+  fetch("/version.json?ts=" + Date.now(), { cache: "no-store" })
+    .then(r => (r.ok ? r.json() : null))
+    .then(info => {
+      const ul = $("#updateNotes");
+      if (ul) {
+        ul.innerHTML = "";
+        ((info && Array.isArray(info.notes)) ? info.notes : []).slice(0, 4)
+          .forEach(n => { const li = document.createElement("li"); li.textContent = n; ul.appendChild(li); });
+      }
+      const t = $("#updateTitle");
+      if (t && info && info.version) t.textContent = `🎉 نسخة جديدة (${info.version})`;
+    })
+    .catch(() => {})
+    .finally(() => bar.classList.remove("hidden"));
+}
+function applyUpdate() {
+  const w = _swReg && _swReg.waiting;
+  $("#updateBar")?.classList.add("hidden");
+  if (w) w.postMessage({ type: "SKIP_WAITING" });   // ثم يعيد controllerchange تحميل الصفحة
+  else location.reload();
+}
+function watchUpdates(reg) {
+  _swReg = reg;
+  // نسخة جديدة "تنتظر" مسبقاً (من زيارة سابقة)
+  if (reg.waiting && navigator.serviceWorker.controller) showUpdate();
+  // نسخة جديدة وصلت أثناء الجلسة الحالية
+  reg.addEventListener("updatefound", () => {
+    const nw = reg.installing;
+    if (!nw) return;
+    nw.addEventListener("statechange", () => {
+      if (nw.state === "installed" && navigator.serviceWorker.controller) showUpdate();
+    });
+  });
+  // افحص وجود تحديث دورياً وعند العودة إلى التبويب
+  setInterval(() => reg.update().catch(() => {}), 60 * 60 * 1000);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") reg.update().catch(() => {});
+  });
+}
 if ("serviceWorker" in navigator) {
   const ok = location.protocol === "https:" || ["localhost", "127.0.0.1"].includes(location.hostname);
-  if (ok) window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));
+  if (ok) window.addEventListener("load", () => {
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (_reloading) return; _reloading = true; location.reload();
+    });
+    navigator.serviceWorker.register("/sw.js").then(watchUpdates).catch(() => {});
+  });
 }
 
 // ---- PWA: زر «ثبّت التطبيق» ----
