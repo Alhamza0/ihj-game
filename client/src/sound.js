@@ -1,12 +1,18 @@
 // ============================ sound (synth, no assets) ============================
 let soundOn = true;
 let AC = null;
+let voiceOn = true;
 
 export function isSoundOn() { return soundOn; }
+export function isVoiceOn() { return voiceOn; }
 export function toggleSound() {
   soundOn = !soundOn;
   if (soundOn) tone(660, 0, .08);
   return soundOn;
+}
+export function toggleVoice() {
+  voiceOn = !voiceOn;
+  return voiceOn;
 }
 // فتح سياق الصوت عند أول تفاعل من المستخدم
 export function unlockAudio() { ac(); }
@@ -105,4 +111,22 @@ export function excitingTick(left) {
     const p = 520 + (5 - left) * 120; kick(0, .3); kick(.16, .22); tone(p, 0, .08, "square", .1);
     if (left <= 3) { tone(p * 1.6, .02, .07, "triangle", .07); hat(0, .12); }
   }
+}
+
+// تعليق صوتي عربي خفيف (Web Speech) — لا يعتمد على ملفات صوت.
+export function speakArabicLine(text) {
+  if (!voiceOn || !soundOn || !text || !("speechSynthesis" in window)) return;
+  try {
+    const t = String(text).replace(/[🎤🎙️⚡🏆👑🔥🙈]/g, "").trim();
+    if (!t) return;
+    const u = new SpeechSynthesisUtterance(t);
+    const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
+    const ar = voices.find(v => /^ar(-|$)/i.test(v.lang)) || voices.find(v => /Arabic/i.test(v.name));
+    if (ar) u.voice = ar;
+    u.lang = ar?.lang || "ar";
+    u.rate = 1;
+    u.pitch = 1;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  } catch (e) {}
 }

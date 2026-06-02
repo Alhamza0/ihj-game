@@ -184,7 +184,7 @@ export function hostBeginGame() {
   socket.emit("host:start");
 }
 
-function renderHostScore({ round, letter, cats, breakdown, totals, invalid, players, firstRender }) {
+function renderHostScore({ round, letter, cats, breakdown, totals, speedBonus, invalid, players, firstRender }) {
   clearLocalTimer();
   CFG.cats = cats; H.letter = letter; H.round = round;
   const rows = {};
@@ -192,7 +192,15 @@ function renderHostScore({ round, letter, cats, breakdown, totals, invalid, play
     rows[cid] = players.map(pl => {
       const brow = (breakdown[cid] || []).find(r => r.key === pl.key);
       const inv = !!(invalid[pl.key] && invalid[pl.key][cid]);
-      return { key: pl.key, name: pl.name, val: (pl.rawVals && pl.rawVals[cid]) || "", pts: brow ? brow.pts : 0, invalid: inv };
+      return {
+        key: pl.key,
+        name: pl.name,
+        val: (pl.rawVals && pl.rawVals[cid]) || "",
+        pts: brow ? brow.pts : 0,
+        reason: brow ? brow.reason : "empty",
+        suspicious: !!(brow && brow.suspicious),
+        invalid: inv,
+      };
     });
   });
   let bk = -1, bn = "";
@@ -201,7 +209,10 @@ function renderHostScore({ round, letter, cats, breakdown, totals, invalid, play
   $("#scoreLetter").textContent = letter;
   $("#scoreRound").textContent = "الجولة " + toAr(round + 1);
   $("#scoreHint").classList.remove("hidden");
-  $("#scoreHint").textContent = "اضغط ✗ بجانب أي إجابة خاطئة لإلغائها — تتحدّث النقاط فوراً على هواتف اللاعبين.";
+  const speedHint = speedBonus && Object.values(speedBonus).some(v => v > 0)
+    ? " · يشمل مكافأة سرعة عادلة"
+    : "";
+  $("#scoreHint").textContent = "اضغط ✗ بجانب أي إجابة خاطئة لإلغائها — تتحدّث النقاط فوراً على هواتف اللاعبين" + speedHint + ".";
   $("#nextRoundBtn").textContent = (round + 1 >= CFG.rounds) ? "عرض النتائج 🏆" : "الجولة التالية ←";
 
   renderScoreBody({
@@ -255,9 +266,10 @@ function wirePlayer() {
     go("s-pwait");
   });
 
-  socket.on("round:score:player", ({ pts, total, rank }) => {
+  socket.on("round:score:player", ({ pts, speed, total, rank }) => {
     clearLocalTimer();
-    $("#pRoundPts").textContent = "+" + toAr(pts);
+    const sp = speed || 0;
+    $("pRoundPts").textContent = "+" + toAr(pts) + (sp > 0 ? " (" + toAr(sp) + "⚡)" : "");
     $("#pTotal").textContent = toAr(total);
     $("#pRank").textContent = toAr(rank);
     go("s-pscore");

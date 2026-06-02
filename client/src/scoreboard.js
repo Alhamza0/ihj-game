@@ -2,7 +2,7 @@
 import { CATS, av, norm, matchLetter } from "@ihj/shared";
 import { $, esc, toAr, go } from "./dom.js";
 import { countUp, crownHTML, burst } from "./fx.js";
-import { sFanfare, sCheer, sTrombone } from "./sound.js";
+import { sFanfare, sCheer, sTrombone, speakArabicLine } from "./sound.js";
 
 // ---- humorous commentator ----
 const MC_LINES = [
@@ -68,6 +68,7 @@ export function renderScoreBody(opts) {
     h.className = "mc";
     h.innerHTML = `<span class="em">🎙️</span><span>${mc.replace("🎤 ", "")}</span>`;
     body.appendChild(h);
+    speakArabicLine(mc);
   }
 
   if (crown && crown.pts > 0) {
@@ -130,6 +131,7 @@ export function renderResults(list, solo) {
   go("s-results");
   lead.querySelectorAll(".sc").forEach(el => countUp(el, +el.dataset.to, 1100));
   sFanfare();
+  if (top?.name) speakArabicLine(`المتصدر حالياً ${top.name} برصيد ${top.score} نقطة`);
   burst(.5, .4, 140);
   setTimeout(() => burst(.2, .3, 70), 300);
   setTimeout(() => burst(.8, .3, 70), 520);

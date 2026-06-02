@@ -11,6 +11,11 @@ export const CATS = [
   { id:"country", nm:"بلاد",     em:"🌍", def:true },
   { id:"food",    nm:"أكلة",     em:"🍽️", def:false },
   { id:"job",     nm:"مهنة",     em:"👷", def:false },
+  { id:"city",    nm:"مدينة",    em:"🏙️", def:false },
+  { id:"brand",   nm:"ماركة",    em:"🏷️", def:false },
+  { id:"sport",   nm:"رياضة",    em:"⚽", def:false },
+  { id:"movie",   nm:"فيلم",     em:"🎬", def:false },
+  { id:"series",  nm:"مسلسل",    em:"📺", def:false },
   { id:"object2", nm:"شيء برّاق", em:"💎", def:false }
 ];
 

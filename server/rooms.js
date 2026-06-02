@@ -37,6 +37,7 @@ export class RoomManager {
       letter: "",
       roundTotals: {},
       scoreInvalid: {},
+      playStartedAt: null,
       timer: null,
     };
     this.rooms.set(code, room);
@@ -75,7 +76,7 @@ export class RoomManager {
         clientId, socketId: socket.id,
         name: (name || "لاعب").slice(0, 14),
         idx: room.players.size,
-        score: 0, answers: null, ready: false, connected: true,
+        score: 0, answers: null, ready: false, doneAt: null, connected: true,
       };
       room.players.set(clientId, player);
     }
@@ -123,8 +124,9 @@ export class RoomManager {
   startRound(room) {
     room.letter = LETTERS[Math.floor(Math.random() * LETTERS.length)];
     room.phase = "reveal";
+    room.playStartedAt = null;
     room.scoreInvalid = {};
-    room.players.forEach(p => { p.answers = null; p.ready = false; });
+    room.players.forEach(p => { p.answers = null; p.ready = false; p.doneAt = null; });
 
     this.io.to(room.code).emit("round:reveal", {
       round: room.round, rounds: room.config.rounds,
@@ -134,6 +136,7 @@ export class RoomManager {
     setTimeout(() => {
       if (!this.rooms.has(room.code)) return;
       room.phase = "play";
+      room.playStartedAt = Date.now();
       this.io.to(room.code).emit("round:play", { letter: room.letter, time: room.config.time });
       this.startTimer(room);
     }, REVEAL_MS);
@@ -161,6 +164,7 @@ export class RoomManager {
     if (!player) return;
     player.answers = vals || player.answers || {};
     if (done) {
+      if (!player.doneAt) player.doneAt = Date.now();
       player.ready = true;
       this.io.to(room.code).emit("submit:status", this.submitStatus(room));
       this.checkAllDone(room);
@@ -201,7 +205,16 @@ export class RoomManager {
       key: p.clientId, name: p.name,
       vals: applyInvalid(p.answers || {}, room.scoreInvalid[p.clientId]),
     }));
-    const res = scoreRound(entries, room.config.cats, room.letter);
+    const speedSecByKey = {};
+    if (room.playStartedAt && room.config.time > 0) {
+      active.forEach(p => {
+        if (p.doneAt) speedSecByKey[p.clientId] = Math.max(0, (p.doneAt - room.playStartedAt) / 1000);
+      });
+    }
+    const res = scoreRound(entries, room.config.cats, room.letter, {
+      speedSecByKey,
+      roundTime: room.config.time,
+    });
     room.roundTotals = res.totals;
 
     // ترتيب مؤقّت بناءً على المجموع + نقاط الجولة
@@ -212,7 +225,7 @@ export class RoomManager {
     // المضيف يستلم التفصيل الكامل
     this.io.to(room.hostSocketId).emit("round:score:host", {
       round: room.round, letter: room.letter, cats: room.config.cats,
-      breakdown: res.breakdown, totals: res.totals,
+      breakdown: res.breakdown, totals: res.totals, speedBonus: res.speedBonus,
       invalid: room.scoreInvalid, firstRender,
       players: active.map(p => ({ key: p.clientId, name: p.name, idx: p.idx, rawVals: p.answers || {} })),
     });
@@ -222,7 +235,10 @@ export class RoomManager {
       const rank = ranked.findIndex(x => x.p.clientId === p.clientId) + 1;
       const total = p.score + (res.totals[p.clientId] || 0);
       this.io.to(p.socketId).emit("round:score:player", {
-        pts: res.totals[p.clientId] || 0, total, rank,
+        pts: res.totals[p.clientId] || 0,
+        speed: res.speedBonus[p.clientId] || 0,
+        total,
+        rank,
       });
     });
   }
