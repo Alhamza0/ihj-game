@@ -23,6 +23,7 @@ const routes = {
   onPlayAgain: () => net.NET.active ? net.hostPlayAgain() : local.onPlayAgain(),
   onDone: () => (net.NET.active && net.NET.role === "player") ? net.playerDone() : local.endTurn(false),
   shareResult,
+  installApp,
 };
 Object.assign(window, routes);
 
@@ -63,6 +64,31 @@ $("#soundBtn").onclick = function () {
 };
 // فتح الصوت عند أول لمسة
 window.addEventListener("pointerdown", () => unlockAudio(), { once: true });
+
+// ---- PWA: تسجيل الـ service worker (إنتاج/HTTPS فقط، أو localhost للتجربة) ----
+if ("serviceWorker" in navigator) {
+  const ok = location.protocol === "https:" || ["localhost", "127.0.0.1"].includes(location.hostname);
+  if (ok) window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));
+}
+
+// ---- PWA: زر «ثبّت التطبيق» ----
+let _deferredPrompt = null;
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  _deferredPrompt = e;
+  $("#installBtn")?.classList.remove("hidden");
+});
+window.addEventListener("appinstalled", () => {
+  _deferredPrompt = null;
+  $("#installBtn")?.classList.add("hidden");
+});
+async function installApp() {
+  if (!_deferredPrompt) { toast("افتح قائمة المتصفح ثم «إضافة إلى الشاشة الرئيسية»"); return; }
+  _deferredPrompt.prompt();
+  try { await _deferredPrompt.userChoice; } catch (e) {}
+  _deferredPrompt = null;
+  $("#installBtn")?.classList.add("hidden");
+}
 
 // توجيه اللاعب تلقائياً إذا دخل عبر رمز QR (?room=CODE)
 (function () {

@@ -1,0 +1,18 @@
+{
+  "name": "إنسان · حيوان · جماد",
+  "short_name": "إ·ح·ج",
+  "description": "لعبة الحروف العربية الجماعية — العبوا معاً على شاشة واحدة أو انضمّوا من هواتفكم.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f1ff",
+  "theme_color": "#7b5cff",
+  "categories": ["games", "education", "entertainment"],
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

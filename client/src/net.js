@@ -5,7 +5,7 @@ import { av } from "@ihj/shared";
 import { $, toAr, esc, toast, go } from "./dom.js";
 import { CFG, onConfigChange, renderCatGrid, syncConfigUI } from "./config.js";
 import { doReveal } from "./reveal.js";
-import { buildFields, collectFields } from "./fields.js";
+import { buildFields, collectFields, saveDraft, clearDraft } from "./fields.js";
 import { initNetTimer, setTimerDisplay, startLocalTimer, clearLocalTimer } from "./timer.js";
 import { renderScoreBody, renderResults, scoreFeedback } from "./scoreboard.js";
 import { unlockAudio, sJoin, sBig, sTrombone } from "./sound.js";
@@ -19,6 +19,15 @@ export const NET = { active: false, role: null };
 let socket = null;
 let H = null;   // host state
 let P = null;   // player state
+
+const PENDING_KEY = "ihj_pending";   // إجابات أُرسلت أثناء انقطاع الاتصال، تُعاد محاولتها عند العودة
+
+// شريط «غير متصل» أعلى الشاشة (يظهر أثناء اللعب الجماعي فقط)
+function setNetbar(offline) {
+  const bar = $("#netbar"); if (!bar) return;
+  if (offline && NET.active) bar.classList.remove("hidden");
+  else bar.classList.add("hidden");
+}
 
 function clientId() {
   let id = localStorage.getItem("ihj_cid");
@@ -40,6 +49,7 @@ function connect() {
 // ---------- shared listeners (host + player) ----------
 function wireCommon() {
   socket.on("connect", () => {
+    setNetbar(false);
     if (NET.role === "host") {
       if (H && H.code) socket.emit("host:rebind", { code: H.code });   // إعادة اتصال
       else socket.emit("host:create", { ...CFG, cats: [...CFG.cats] }); // أول اتصال
@@ -47,6 +57,8 @@ function wireCommon() {
       socket.emit("player:join", { code: P.code, name: P.name, clientId: clientId() });
     }
   });
+
+  socket.on("disconnect", () => { if (NET.role === "player") setNetbar(true); });
 
   socket.on("connect_error", () => {
     if (NET.role === "host") setStatus("hostStatus", "err", "تعذّر الاتصال بالخادم");
@@ -72,7 +84,7 @@ function wireCommon() {
       go("s-tvplay");
       initNetTimer(time, TV);
     } else {
-      buildFields(letter, CFG.cats);
+      buildFields(letter, CFG.cats, { code: P.code, round: P.round, letter });
       $("#playLetter").textContent = letter;
       $("#playWho").textContent = P.name;
       $("#playRound").textContent = "الجولة " + toAr(P.round + 1) + " · حرف " + letter;
@@ -250,6 +262,8 @@ function wirePlayer() {
   socket.on("join:ok", ({ name, config }) => {
     P.joined = true;
     if (config) { CFG.cats = config.cats; CFG.rounds = config.rounds; CFG.time = config.time; }
+    setNetbar(false);
+    flushPending();   // أرسل أي إجابات علِقت أثناء انقطاع سابق
     sJoin();
     const a = av(0);
     $("#pwaitMe").innerHTML = `<span class="av" style="background:${a.bg}">🙂</span>${esc(name)}`;
@@ -268,6 +282,8 @@ function wirePlayer() {
 
   socket.on("round:score:player", ({ pts, speed, total, rank }) => {
     clearLocalTimer();
+    clearDraft();
+    try { localStorage.removeItem(PENDING_KEY); } catch (e) {}
     const sp = speed || 0;
     $("pRoundPts").textContent = "+" + toAr(pts) + (sp > 0 ? " (" + toAr(sp) + "⚡)" : "");
     $("#pTotal").textContent = toAr(total);
@@ -288,14 +304,32 @@ function wirePlayer() {
   socket.on("room:closed", () => { toast("أُغلقت الغرفة"); setStatus("joinStatus", "err", "أُغلقت الغرفة"); });
 }
 
-let _submittedScreen = false;
 function playerSubmit(auto) {
   if (!$("#s-play").classList.contains("active")) return;
   const vals = collectFields();
   clearLocalTimer();
-  if (socket) socket.emit("player:done", { vals });
-  if (!auto) { encourage("👏 أحسنت!"); } else toast("انتهى الوقت — أُرسلت إجاباتك");
+  if (socket && socket.connected) {
+    socket.emit("player:done", { vals });
+    clearDraft();
+    try { localStorage.removeItem(PENDING_KEY); } catch (e) {}
+  } else {
+    // غير متصل: احفظ الإجابات لتُرسَل تلقائياً عند عودة الاتصال
+    try { localStorage.setItem(PENDING_KEY, JSON.stringify({ code: P?.code, round: P?.round, vals })); } catch (e) {}
+    toast("لا اتصال — سنرسل إجاباتك تلقائياً عند عودة الشبكة");
+  }
+  if (!auto) { encourage("👏 أحسنت!"); } else if (socket && socket.connected) toast("انتهى الوقت — أُرسلت إجاباتك");
   go("s-psent");
+}
+
+// إعادة إرسال إجابات معلّقة (أُرسلت أثناء انقطاع) عند عودة الاتصال
+function flushPending() {
+  let p; try { p = JSON.parse(localStorage.getItem(PENDING_KEY) || "null"); } catch (e) { p = null; }
+  if (!p || !socket || !socket.connected) return;
+  if (P && p.code === P.code && p.round === P.round) {
+    socket.emit("player:done", { vals: p.vals });
+    clearDraft();
+  }
+  try { localStorage.removeItem(PENDING_KEY); } catch (e) {}
 }
 
 // زر «انتهيت» في شاشة اللعب
@@ -304,6 +338,9 @@ export function playerDone() { playerSubmit(false); }
 /* ============================ leave / cleanup ============================ */
 export function leaveNet(to) {
   clearLocalTimer();
+  setNetbar(false);
+  clearDraft();
+  try { localStorage.removeItem(PENDING_KEY); } catch (e) {}
   try { if (socket) { socket.removeAllListeners(); socket.disconnect(); } } catch (e) {}
   socket = null; H = null; P = null;
   NET.active = false; NET.role = null;
@@ -313,6 +350,14 @@ export function leaveNet(to) {
   try { if (location.search && history.replaceState) history.replaceState(null, "", location.pathname); } catch (e) {}
   go(to || "s-home");
 }
+
+// عند قفل الشاشة/تبديل التطبيق: احفظ المسوّدة فوراً (دون إنهاء الجولة) كي لا تضيع الإجابات
+function persistOnHide() {
+  if (NET.role !== "player" || !P || !$("#s-play").classList.contains("active")) return;
+  saveDraft({ code: P.code, round: P.round, letter: P.letter }, collectFields());
+}
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") persistOnHide(); });
+window.addEventListener("pagehide", persistOnHide);
 
 export function netShareList() {
   if (NET.role === "host") return H?.ranking || [];

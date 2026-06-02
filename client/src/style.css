@@ -284,3 +284,28 @@ a.link{color:var(--violet);font-weight:800;text-decoration:none;cursor:pointer}
 .cat .em svg{width:30px;height:30px;display:block}
 .field .ic.creature{width:30px;height:30px}
 .field .ic.creature svg{width:30px;height:30px;display:block}
+
+/* ============================ PWA + لمسات الجوال ============================ */
+/* شريط «غير متصل» أعلى الشاشة أثناء اللعب الجماعي */
+.netbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:center;gap:8px;
+  margin:-6px 0 10px;padding:9px 14px;border-radius:14px;font-weight:800;font-size:14px;
+  color:#8a4b00;background:var(--grad-gold);box-shadow:var(--shadow-sm);animation:rise .3s both}
+.netbar .dotpulse{background:#8a4b00;animation:pulse 1.4s infinite}
+
+.install-btn{white-space:nowrap}
+
+/* احترام منطقة الأمان على الأجهزة ذات الحواف (iPhone notch) */
+.app{padding-bottom:max(40px,env(safe-area-inset-bottom));}
+
+/* حقول أكبر وأسهل لمساً على الجوال (لا يؤثر على شاشة التلفاز) */
+@media (max-width:480px), (pointer:coarse){
+  body:not(.tv) .fields{gap:14px}
+  body:not(.tv) .field input.txt{padding:18px 16px;font-size:17px;border-radius:16px;border-width:2px}
+  body:not(.tv) .field input{padding-inline-start:52px}
+  body:not(.tv) .field .ic.creature,
+  body:not(.tv) .field .ic.creature svg{width:34px;height:34px}
+  body:not(.tv) .field .tag{font-size:13px}
+  /* زر «انتهيت» لاصق أسفل شاشة اللعب مع هدف لمس مريح */
+  body:not(.tv) #s-play #doneBtn{position:sticky;bottom:max(6px,env(safe-area-inset-bottom));
+    min-height:56px;font-size:19px;box-shadow:0 18px 34px -10px rgba(255,77,151,.6),var(--gloss)}
+}
