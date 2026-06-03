@@ -1,6 +1,7 @@
 // ============================ authoritative room manager ============================
 // الخادم هو المصدر الموثوق: يختار الحرف، يدير المؤقّت، يجمع الإجابات، ويحسب النقاط.
 import { LETTERS, scoreRound } from "@ihj/shared";
+import { verifyToken, recordMatch } from "./supabase.js";
 
 const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const REVEAL_MS = 4200;   // مدة أنيميشن العدّ التنازلي + ظهور الحرف على العملاء
@@ -59,10 +60,14 @@ export class RoomManager {
   }
 
   // ---------- player ----------
-  joinRoom(socket, { code, name, clientId }) {
+  async joinRoom(socket, { code, name, clientId, token }) {
     code = (code || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4);
     const room = this.rooms.get(code);
     if (!room) { socket.emit("join:failed", { message: "لا توجد غرفة بهذا الرمز" }); return; }
+
+    // هوية اختيارية عبر Supabase (يبقى ضيفاً إن لم يسجّل الدخول)
+    const auth = token ? await verifyToken(token) : null;
+    if (!this.rooms.has(code)) return;   // قد تُغلق الغرفة أثناء التحقّق
 
     let player = clientId && room.players.get(clientId);
     if (player) {
@@ -70,13 +75,15 @@ export class RoomManager {
       player.socketId = socket.id;
       player.connected = true;
       if (name) player.name = name.slice(0, 14);
+      if (auth) player.auth = auth;
     } else {
       clientId = clientId || socket.id;
       player = {
         clientId, socketId: socket.id,
-        name: (name || "لاعب").slice(0, 14),
+        name: (name || auth?.name || "لاعب").slice(0, 14),
         idx: room.players.size,
         score: 0, answers: null, ready: false, doneAt: null, connected: true,
+        auth: auth || null,
       };
       room.players.set(clientId, player);
     }
@@ -257,6 +264,19 @@ export class RoomManager {
     const ranked = this.activePlayers(room).slice().sort((a, b) => b.score - a.score);
     const ranking = ranked.map(p => ({ name: p.name, score: p.score, idx: p.idx }));
     this.io.to(room.code).emit("game:results", { ranking, winner: ranking[0]?.name });
+
+    // حفظ النتائج في Supabase (اختياري + غير حاجب؛ لا يؤثّر على المباراة عند الفشل)
+    const top = ranked[0]?.score || 0;
+    recordMatch(
+      { code: room.code, rounds: room.config.rounds },
+      ranked.map((p, i) => ({
+        auth: p.auth || null,
+        name: p.name,
+        score: p.score,
+        placement: i + 1,
+        isWinner: top > 0 && p.score === top,
+      }))
+    );
   }
 
   playAgain(socket) {

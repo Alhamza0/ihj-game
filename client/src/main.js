@@ -1,11 +1,14 @@
 // ============================ app bootstrap ============================
 import "./style.css";
-import { $, go, toast } from "./dom.js";
+import { $, go, toast, esc } from "./dom.js";
 import { wireSeg, renderCatGrid, syncConfigUI, bumpRounds } from "./config.js";
 import { toggleSound, unlockAudio } from "./sound.js";
 import { MASCOT, tile, star } from "./art.js";
 import * as local from "./local-game.js";
 import * as net from "./net.js";
+import { authEnabled, onAuthChange, currentUser, signInWithGoogle } from "./auth.js";
+import { openLeaderboard, lbSetPeriod } from "./leaderboard.js";
+import { openProfile, doSignOut } from "./profile.js";
 
 // ---- route inline-handler buttons (kept in HTML) ----
 const routes = {
@@ -25,6 +28,11 @@ const routes = {
   shareResult,
   installApp,
   applyUpdate,
+  openLeaderboard,
+  lbSetPeriod,
+  openProfile,
+  doSignOut,
+  authAction,
 };
 Object.assign(window, routes);
 
@@ -145,6 +153,28 @@ async function installApp() {
   try { await _deferredPrompt.userChoice; } catch (e) {}
   _deferredPrompt = null;
   $("#installBtn")?.classList.add("hidden");
+}
+
+// ---- الحسابات (Supabase) — تُخفى الأزرار إن لم تُهيّأ البيئة ----
+function authAction() {
+  const u = currentUser();
+  if (u) openProfile(u.uid, u.name);
+  else signInWithGoogle();
+}
+if (authEnabled) {
+  $("#lbTile")?.classList.remove("hidden");
+  const btn = $("#authBtn");
+  onAuthChange(u => {
+    if (btn) {
+      btn.classList.remove("hidden");
+      btn.innerHTML = u
+        ? (u.avatar ? `<img class="btnav" src="${u.avatar}" referrerpolicy="no-referrer" alt="">` : "👤") + ` ${esc(u.name.split(" ")[0])}`
+        : `<svg class="ic"><use href="#ic-users"/></svg> دخول`;
+    }
+    // املأ اسم الانضمام تلقائياً من الحساب (إن كان الحقل فارغاً)
+    const nameInput = $("#joinName");
+    if (u && nameInput && !nameInput.value) nameInput.value = u.name.slice(0, 14);
+  });
 }
 
 // توجيه اللاعب تلقائياً إذا دخل عبر رمز QR (?room=CODE)

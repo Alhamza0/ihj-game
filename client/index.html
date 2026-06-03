@@ -46,6 +46,7 @@
   <div class="topbar">
     <div class="logo"><span class="dot"></span>إ·ح·ج</div>
     <div class="row" style="gap:8px;width:auto">
+      <button class="btn ghost sm auth-btn hidden" id="authBtn" onclick="authAction()"></button>
       <button class="btn ghost sm install-btn hidden" id="installBtn" onclick="installApp()" title="ثبّت التطبيق"><svg class="ic"><use href="#ic-plus"/></svg> ثبّت</button>
       <button class="icon-btn" id="soundBtn" title="الصوت"><svg class="ic"><use href="#ic-sound"/></svg></button>
     </div>
@@ -73,6 +74,10 @@
       <button class="tile" onclick="go('s-join')">
         <span class="tile-ic"><svg class="ic"><use href="#ic-phone"/></svg></span>
         <span class="tile-tx"><b>انضمام برمز</b><span>أدخل رمز الغرفة يدوياً</span></span>
+      </button>
+      <button class="tile lb-tile hidden" id="lbTile" onclick="openLeaderboard()">
+        <span class="tile-ic">🏆</span>
+        <span class="tile-tx"><b>الليدربورد</b><span>تصنيف اللاعبين وأبطال اليوم والأسبوع</span></span>
       </button>
     </div>
     <footer class="appfoot stagger">
@@ -275,6 +280,34 @@
         <button class="btn" style="flex:1" id="againBtn" onclick="onPlayAgain()"><svg class="ic"><use href="#ic-refresh"/></svg> مرة أخرى</button>
       </div>
       <button class="btn ghost sm" style="margin-top:10px" onclick="leaveNet('s-home')">القائمة الرئيسية</button>
+    </div>
+  </section>
+
+  <!-- ===== LEADERBOARD ===== -->
+  <section class="screen" id="s-leaderboard">
+    <div class="stagger" style="display:flex;flex-direction:column;gap:16px;flex:1">
+      <div class="row">
+        <button class="icon-btn" onclick="go('s-home')"><svg class="ic"><use href="#ic-back"/></svg></button>
+        <div class="logo" style="font-size:20px">🏆 الليدربورد</div><div style="width:44px"></div>
+      </div>
+      <div class="seg" id="lbTabs">
+        <button class="on" onclick="lbSetPeriod('all',this)">كل الأوقات</button>
+        <button onclick="lbSetPeriod('week',this)">الأسبوع</button>
+        <button onclick="lbSetPeriod('day',this)">اليوم</button>
+      </div>
+      <div class="card" style="flex:1"><div id="lbBody"></div></div>
+    </div>
+  </section>
+
+  <!-- ===== PUBLIC PROFILE ===== -->
+  <section class="screen" id="s-profile">
+    <div class="stagger" style="display:flex;flex-direction:column;gap:16px;flex:1">
+      <div class="row">
+        <button class="icon-btn" onclick="openLeaderboard()"><svg class="ic"><use href="#ic-back"/></svg></button>
+        <div class="logo" style="font-size:20px">ملف اللاعب</div><div style="width:44px"></div>
+      </div>
+      <div class="card" id="profHead"></div>
+      <div class="card" style="flex:1"><span class="label">آخر المباريات</span><div id="profMatches"></div></div>
     </div>
   </section>
 </div>

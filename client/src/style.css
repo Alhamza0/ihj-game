@@ -328,3 +328,35 @@ body.tv .appfoot{display:none}
   font-weight:700;line-height:1.6;max-height:84px;overflow:auto}
 .update-bar .ub-notes:empty{display:none}
 .update-bar .btn.sm{flex:none}
+
+/* ============================ الحسابات + الليدربورد + الملف ============================ */
+/* زر الدخول/الحساب في الشريط العلوي */
+.auth-btn{gap:7px;max-width:150px;overflow:hidden}
+.auth-btn .btnav{width:22px;height:22px;border-radius:50%;object-fit:cover;flex:none}
+.lb-tile .tile-ic{font-size:27px}
+
+/* صفوف الليدربورد (تبني فوق .lrow الموجود) */
+#lbBody{display:flex;flex-direction:column;gap:10px}
+.lrow.rank{cursor:pointer}
+.lrow.rank:active{transform:translateY(2px)}
+.lrow.rank.top{background:linear-gradient(135deg,#fff,var(--card-soft));border-color:var(--line-2)}
+.lrow .medal{font-size:24px;width:34px;text-align:center;flex:none}
+.lrow .medal .rk{font-family:var(--disp);font-weight:800;font-size:22px;color:var(--muted-2)}
+.lbav{width:44px;height:44px;border-radius:14px;object-fit:cover;flex:none;background:var(--card-soft);display:grid;place-items:center;font-size:22px}
+.lrow .who{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.lrow .who .nm{flex:none;font-weight:800;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lrow .who small{color:var(--muted);font-weight:700;font-size:12.5px}
+
+/* الملف العام */
+.prof-top{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.profav{width:64px;height:64px;border-radius:20px;object-fit:cover;flex:none;background:var(--card-soft);display:grid;place-items:center;font-size:32px}
+.prof-name{font-family:var(--disp);font-weight:800;font-size:24px;color:var(--ink)}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:var(--card-soft);border:1.5px solid var(--line);border-radius:14px;padding:12px;text-align:center}
+.stat b{display:block;font-family:var(--disp);font-size:24px;color:var(--ink)}
+.stat span{color:var(--muted);font-weight:700;font-size:13px}
+.mrow{display:flex;align-items:center;gap:12px;padding:12px 6px;border-bottom:1px solid var(--line)}
+.mrow:last-child{border-bottom:none}
+.mrow .mp{font-weight:800;flex:1}
+.mrow small{color:var(--muted);font-weight:700}
+.mrow .sc{font-family:var(--disp);font-weight:800;font-size:20px;color:var(--violet)}

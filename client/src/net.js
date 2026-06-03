@@ -10,6 +10,7 @@ import { initNetTimer, setTimerDisplay, startLocalTimer, clearLocalTimer } from 
 import { renderScoreBody, renderResults, scoreFeedback } from "./scoreboard.js";
 import { unlockAudio, sJoin, sBig, sTrombone } from "./sound.js";
 import { encourage, burst } from "./fx.js";
+import { getAccessToken } from "./auth.js";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || `${location.protocol}//${location.hostname}:3001`;
 const TV = { arc: "tvArc", num: "tvNum", wrap: "tvTimerWrap" };
@@ -54,7 +55,7 @@ function wireCommon() {
       if (H && H.code) socket.emit("host:rebind", { code: H.code });   // إعادة اتصال
       else socket.emit("host:create", { ...CFG, cats: [...CFG.cats] }); // أول اتصال
     } else if (NET.role === "player" && P) {
-      socket.emit("player:join", { code: P.code, name: P.name, clientId: clientId() });
+      socket.emit("player:join", { code: P.code, name: P.name, clientId: clientId(), token: getAccessToken() });
     }
   });
 
