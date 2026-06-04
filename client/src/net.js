@@ -105,6 +105,10 @@ function wireCommon() {
   socket.on("round:collect", () => {
     if (NET.role === "player" && $("#s-play").classList.contains("active")) playerSubmit(true);
   });
+
+  socket.on("round:judging", () => {
+    if (NET.role === "host") $("#judgingHint")?.classList.remove("hidden");
+  });
 }
 
 /* ============================ HOST ============================ */
@@ -197,14 +201,17 @@ export function hostBeginGame() {
   socket.emit("host:start");
 }
 
-function renderHostScore({ round, letter, cats, breakdown, totals, speedBonus, invalid, players, firstRender }) {
+function renderHostScore({ round, letter, cats, breakdown, totals, speedBonus, invalid, autoJudge, players, firstRender }) {
   clearLocalTimer();
+  $("#judgingHint")?.classList.add("hidden");   // أخفِ مؤشّر التحكيم
   CFG.cats = cats; H.letter = letter; H.round = round;
+  const aj = autoJudge || {};
   const rows = {};
   cats.forEach(cid => {
     rows[cid] = players.map(pl => {
       const brow = (breakdown[cid] || []).find(r => r.key === pl.key);
       const inv = !!(invalid[pl.key] && invalid[pl.key][cid]);
+      const verdict = aj[pl.key] && aj[pl.key][cid];
       return {
         key: pl.key,
         name: pl.name,
@@ -213,6 +220,7 @@ function renderHostScore({ round, letter, cats, breakdown, totals, speedBonus, i
         reason: brow ? brow.reason : "empty",
         suspicious: !!(brow && brow.suspicious),
         invalid: inv,
+        auto: !!(verdict && verdict.valid === false),   // رُفض آلياً
       };
     });
   });

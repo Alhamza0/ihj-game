@@ -2,6 +2,7 @@
 // الخادم هو المصدر الموثوق: يختار الحرف، يدير المؤقّت، يجمع الإجابات، ويحسب النقاط.
 import { LETTERS, scoreRound } from "@ihj/shared";
 import { verifyToken, recordMatch } from "./supabase.js";
+import { judgeRound, judgeEnabled } from "./judge.js";
 
 const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const REVEAL_MS = 4200;   // مدة أنيميشن العدّ التنازلي + ظهور الحرف على العملاء
@@ -38,6 +39,7 @@ export class RoomManager {
       letter: "",
       roundTotals: {},
       scoreInvalid: {},
+      autoJudge: {},
       playStartedAt: null,
       timer: null,
     };
@@ -133,6 +135,7 @@ export class RoomManager {
     room.phase = "reveal";
     room.playStartedAt = null;
     room.scoreInvalid = {};
+    room.autoJudge = {};
     room.players.forEach(p => { p.answers = null; p.ready = false; p.doneAt = null; });
 
     this.io.to(room.code).emit("round:reveal", {
@@ -195,7 +198,32 @@ export class RoomManager {
     room.phase = "score";
     this.clearTimer(room);
     this.io.to(room.code).emit("round:collect");
-    setTimeout(() => this.computeAndSendScore(room, true), COLLECT_GRACE_MS);
+    setTimeout(async () => {
+      if (!this.rooms.has(room.code) || room.phase !== "score") return;
+      await this.autoJudgeRoom(room);                  // تحكيم آلي (إن مُفعّل) قبل أول نتيجة
+      if (!this.rooms.has(room.code) || room.phase !== "score") return;
+      this.computeAndSendScore(room, true);
+    }, COLLECT_GRACE_MS);
+  }
+
+  // تحكيم آلي للجولة: يضع علامة أولية على الإجابات المرفوضة (المضيف يستطيع عكسها)
+  async autoJudgeRoom(room) {
+    if (!judgeEnabled) return;
+    const active = this.activePlayers(room);
+    const entries = active.map(p => ({ key: p.clientId, vals: p.answers || {} }));
+    this.io.to(room.code).emit("round:judging");
+    let verdicts = {};
+    try { verdicts = await judgeRound(room.letter, room.config.cats, entries); } catch (e) { verdicts = {}; }
+    if (!this.rooms.has(room.code) || room.phase !== "score") return;
+    room.autoJudge = verdicts || {};
+    // املأ scoreInvalid للمرفوض آلياً (مرّة واحدة؛ المضيف يعكس بزر التجاوز)
+    Object.keys(room.autoJudge).forEach(key => {
+      Object.keys(room.autoJudge[key]).forEach(cat => {
+        if (room.autoJudge[key][cat].valid === false) {
+          (room.scoreInvalid[key] || (room.scoreInvalid[key] = {}))[cat] = true;
+        }
+      });
+    });
   }
 
   invalidate(socket, { key, cat }) {
@@ -233,7 +261,7 @@ export class RoomManager {
     this.io.to(room.hostSocketId).emit("round:score:host", {
       round: room.round, letter: room.letter, cats: room.config.cats,
       breakdown: res.breakdown, totals: res.totals, speedBonus: res.speedBonus,
-      invalid: room.scoreInvalid, firstRender,
+      invalid: room.scoreInvalid, autoJudge: room.autoJudge, firstRender,
       players: active.map(p => ({ key: p.clientId, name: p.name, idx: p.idx, rawVals: p.answers || {} })),
     });
 

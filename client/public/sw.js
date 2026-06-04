@@ -4,7 +4,7 @@
    لا نعتمد على أسماء أصول Vite المُجزّأة: نكاش وقت التشغيل (runtime caching).
 */
 // ⚠️ ارفع هذا الرقم مع كل إصدار (طابقه مع package.json) كي يكتشف المتصفح التحديث.
-const CACHE_VERSION = "ihj-v1.4.0";
+const CACHE_VERSION = "ihj-v1.5.0";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon.svg", "./maskable.svg"];
 
 self.addEventListener("install", (e) => {

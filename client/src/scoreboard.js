@@ -24,7 +24,9 @@ function pickMC(rows, cats) {
 
 function quipFor(row, catRows, letter, invalidated) {
   const v = (row.val || "").trim();
-  if (invalidated) return { t: "✋ أُلغيت — مرفوضة من اللجنة", k: "miss" };
+  if (invalidated) return row.auto
+    ? { t: "🤖 رُفض آلياً — اضغط ✓ للقبول", k: "miss" }
+    : { t: "✋ أُلغيت — مرفوضة من اللجنة", k: "miss" };
   if (!v) return { t: "📄 بياض الورقة… إلهام مفقود!", k: "miss" };
   if (!matchLetter(v, letter)) return { t: "🙃 الحرف المطلوب «" + letter + "» مو هذا!", k: "miss" };
   const compact = norm(v).replace(/\s/g, "");
