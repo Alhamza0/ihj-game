@@ -20,7 +20,8 @@ const fail = m => { console.error("❌ FAIL:", m); process.exit(1); };
 (async () => {
   await new Promise(r => host.on("connect", r));
   log("== host:create ==");
-  host.emit("host:create", { cats: ["person", "animal", "country"], rounds: 1, time: 0 });
+  // فئات مفتوحة فقط: لا يرفضها القاموس بلا مفتاح ذكاء، فيختبر البروتوكول/الحساب بثبات
+  host.emit("host:create", { cats: ["person", "animal", "plant"], rounds: 1, time: 0 });
   const created = await new Promise(r => host.once("host:created", r));
   code = created.code;
   log("room code:", code, "config:", JSON.stringify(created.config));

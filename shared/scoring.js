@@ -13,8 +13,15 @@ export const norm = s => (s || "")
 
 export const firstLetter = s => { const n = norm(s); return n ? n[0] : ""; };
 
-export const matchLetter = (a, L) =>
-  firstLetter(a) !== "" && firstLetter(a) === firstLetter(L);
+// إسقاط أداة التعريف «ال» من بداية الكلمة (للالتباس: الصين ↔ صين)
+export const stripAl = s => { const n = norm(s); return (n.startsWith("ال") && n.length > 3) ? n.slice(2) : n; };
+
+// تطابق الحرف: يقبل الحرف الأول مباشرةً أو بعد إسقاط «ال» (فـ«الصين» تُحتسب لـ ص)
+export const matchLetter = (a, L) => {
+  const fl = firstLetter(L);
+  if (!fl) return false;
+  return firstLetter(a) === fl || (stripAl(a)[0] || "") === fl;
+};
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const compact = s => norm(s).replace(/\s/g, "");

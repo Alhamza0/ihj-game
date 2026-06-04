@@ -3,15 +3,19 @@
 // مبدأ: القاموس يؤكّد المعروف؛ غير المعروف يُحال للذكاء؛ عند أي فشل لا نرفض شيئاً (المضيف يصحّح).
 import Anthropic from "@anthropic-ai/sdk";
 import { CATS, norm, matchLetter } from "@ihj/shared";
-import { inDictionary, CLOSED_CATS } from "@ihj/shared/dictionaries";
+import { inDictionary, CLOSED_CATS, STRICT_CATS } from "@ihj/shared/dictionaries";
 
-export const judgeEnabled = !!process.env.ANTHROPIC_API_KEY;
+// الذكاء اختياري؛ القاموس يعمل دائماً (بلا تكلفة).
+export const aiEnabled = !!process.env.ANTHROPIC_API_KEY;
+export const judgeEnabled = true;   // التحكيم الآلي فعّال دائماً (قاموس + ذكاء إن وُجد المفتاح)
 
-const client = judgeEnabled ? new Anthropic() : null;
+const client = aiEnabled ? new Anthropic() : null;
 const MODEL = "claude-haiku-4-5";
 const catName = id => (CATS.find(c => c.id === id)?.nm) || id;
 
-console.log(judgeEnabled ? "🤖 التحكيم الذكي: مُفعّل (Claude Haiku)" : "🤖 التحكيم الذكي: غير مُهيّأ");
+console.log(aiEnabled
+  ? "🤖 التحكيم: قاموس + ذكاء (Claude Haiku)"
+  : "🤖 التحكيم: قاموس فقط (بلا مفتاح ذكاء)");
 
 // كاش في الذاكرة لنتائج الذكاء: `${cat}|${letter}|${normWord}` -> bool
 const verdictCache = new Map();
@@ -46,11 +50,10 @@ const SCHEMA = {
 // يعيد: { [key]: { [cat]: { valid, src } } } للإجابات المطابقة للحرف وغير الفارغة فقط
 export async function judgeRound(letter, cats, entries) {
   const out = {};
-  if (!judgeEnabled) return out;
 
-  // candidates للذكاء: cat -> Map(normWord -> true)  ؛ ونحتفظ بربط (key,cat)->normWord
-  const aiWords = {};           // catId -> Set(normWord)
-  const cellWord = {};          // key -> { cat -> normWord }
+  // candidates للذكاء: cat -> Set(normWord)  ؛ ونحتفظ بربط (key,cat)->normWord
+  const aiWords = {};
+  const cellWord = {};
 
   for (const e of entries) {
     const vals = e.vals || {};
@@ -59,19 +62,26 @@ export async function judgeRound(letter, cats, entries) {
       if (!raw || !matchLetter(raw, letter)) continue;   // الفارغ/غير المطابق = ٠ أصلاً
       const w = norm(raw);
       (cellWord[e.key] ||= {})[cat] = w;
+      const closed = CLOSED_CATS.includes(cat);
 
-      if (CLOSED_CATS.includes(cat) && inDictionary(cat, raw)) {
-        (out[e.key] ||= {})[cat] = { valid: true, src: "dict" };   // مؤكّد مجاناً
+      // 1) القاموس: ما هو معروف → صحيح فوراً (مجاناً)
+      if (closed && inDictionary(cat, raw)) {
+        (out[e.key] ||= {})[cat] = { valid: true, src: "dict" };
         continue;
       }
-      const cached = verdictCache.get(ck(cat, letter, w));
-      if (cached !== undefined) {
-        (out[e.key] ||= {})[cat] = { valid: cached, src: "cache" };
-        continue;
+      // 2) غير معروف في القاموس
+      if (aiEnabled) {
+        const cached = verdictCache.get(ck(cat, letter, w));
+        if (cached !== undefined) { (out[e.key] ||= {})[cat] = { valid: cached, src: "cache" }; continue; }
+        (aiWords[cat] ||= new Set()).add(w);   // يُحال للذكاء
+      } else if (closed && STRICT_CATS.includes(cat)) {
+        // بلا ذكاء: الفئة الصارمة (بلدان) قائمتها شبه كاملة → رفض غير الموجود (المضيف يعكس)
+        (out[e.key] ||= {})[cat] = { valid: false, src: "dict" };
       }
-      (aiWords[cat] ||= new Set()).add(w);
+      // غير ذلك (فئة مفتوحة/مساعِدة بلا ذكاء) → نتركها للمضيف
     }
   }
+  if (!aiEnabled) return out;   // اكتفينا بالقاموس
 
   // نداء الذكاء (واحد للجولة) لِما تبقّى
   const items = Object.entries(aiWords)

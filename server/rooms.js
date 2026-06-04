@@ -2,7 +2,7 @@
 // الخادم هو المصدر الموثوق: يختار الحرف، يدير المؤقّت، يجمع الإجابات، ويحسب النقاط.
 import { LETTERS, scoreRound } from "@ihj/shared";
 import { verifyToken, recordMatch } from "./supabase.js";
-import { judgeRound, judgeEnabled } from "./judge.js";
+import { judgeRound, aiEnabled } from "./judge.js";
 
 const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const REVEAL_MS = 4200;   // مدة أنيميشن العدّ التنازلي + ظهور الحرف على العملاء
@@ -208,10 +208,9 @@ export class RoomManager {
 
   // تحكيم آلي للجولة: يضع علامة أولية على الإجابات المرفوضة (المضيف يستطيع عكسها)
   async autoJudgeRoom(room) {
-    if (!judgeEnabled) return;
     const active = this.activePlayers(room);
     const entries = active.map(p => ({ key: p.clientId, vals: p.answers || {} }));
-    this.io.to(room.code).emit("round:judging");
+    if (aiEnabled) this.io.to(room.code).emit("round:judging");   // مؤشّر فقط عند وجود تأخير الذكاء
     let verdicts = {};
     try { verdicts = await judgeRound(room.letter, room.config.cats, entries); } catch (e) { verdicts = {}; }
     if (!this.rooms.has(room.code) || room.phase !== "score") return;
