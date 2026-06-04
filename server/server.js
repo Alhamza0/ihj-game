@@ -4,13 +4,27 @@ import { createServer } from "node:http";
 import { Server } from "socket.io";
 import cors from "cors";
 import { RoomManager } from "./rooms.js";
+import { verifyToken, recordMatch } from "./supabase.js";
 
 const PORT = process.env.PORT || 3001;
 const ORIGIN = process.env.CLIENT_ORIGIN || "*";
 
 const app = express();
 app.use(cors({ origin: ORIGIN }));
+app.use(express.json());
 app.get("/health", (_req, res) => res.json({ ok: true, rooms: rm.rooms.size }));
+
+// حفظ مباراة التدريب الفردي للاعب المسجّل (نقاط + مباراة، دون فوز)
+app.post("/solo", async (req, res) => {
+  const { token, score, rounds } = req.body || {};
+  const auth = token ? await verifyToken(token) : null;
+  if (!auth) return res.json({ ok: false });
+  await recordMatch(
+    { code: "SOLO", rounds: Number(rounds) || 0 },
+    [{ auth, name: auth.name, score: Number(score) || 0, placement: 1, isWinner: false }]
+  );
+  res.json({ ok: true });
+});
 
 const httpServer = createServer(app);
 const io = new Server(httpServer, { cors: { origin: ORIGIN } });

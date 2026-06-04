@@ -8,6 +8,21 @@ import { startLocalTimer, clearLocalTimer } from "./timer.js";
 import { renderScoreBody, renderResults, scoreFeedback } from "./scoreboard.js";
 import { sDone } from "./sound.js";
 import { encourage } from "./fx.js";
+import { getAccessToken } from "./auth.js";
+import { SERVER_URL } from "./net.js";
+
+// حفظ مباراة التدريب الفردي للاعب المسجّل (نقاط + مباراة، دون احتساب فوز)
+async function recordSolo(score) {
+  const token = getAccessToken();
+  if (!token) return;   // ضيف غير مسجّل → لا حفظ
+  try {
+    await fetch(SERVER_URL + "/solo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, score, rounds: CFG.rounds }),
+    });
+  } catch (e) {}
+}
 
 export const L = {
   mode: "team",
@@ -166,6 +181,8 @@ function showLocalResults() {
   renderResults(ranked, L.mode === "solo");
   $("#resultBtns").classList.remove("hidden");
   $("#againBtn").classList.remove("hidden");
+  // التدريب الفردي: احفظ النتيجة للاعب المسجّل
+  if (L.mode === "solo") recordSolo(L.players[0]?.score || 0);
 }
 
 export function onPlayAgain() {

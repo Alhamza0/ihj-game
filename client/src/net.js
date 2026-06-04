@@ -12,7 +12,7 @@ import { unlockAudio, sJoin, sBig, sTrombone } from "./sound.js";
 import { encourage, burst } from "./fx.js";
 import { getAccessToken } from "./auth.js";
 
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || `${location.protocol}//${location.hostname}:3001`;
+export const SERVER_URL = import.meta.env.VITE_SERVER_URL || `${location.protocol}//${location.hostname}:3001`;
 const TV = { arc: "tvArc", num: "tvNum", wrap: "tvTimerWrap" };
 const PHONE = { arc: "timerArc", num: "timerNum", wrap: "timerWrap" };
 
