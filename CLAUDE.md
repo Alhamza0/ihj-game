@@ -72,15 +72,16 @@ client/         واجهة Vite (vanilla JS modules) — تحافظ على نف�
 - Render: Web Service · Root Directory `server` · Build `npm install` · Start `npm start`
 - Vercel: Build `npm run build` · Output `client/dist` · متغير `VITE_SERVER_URL=https://ihj-game.onrender.com`
 
-### ⚠️ النشر اليدوي (لا يوجد ربط Git تلقائي بعد)
-المستودع **غير مربوط** بـ Vercel/Render عبر GitHub (لا webhooks)، فالدفع إلى `main` **لا** يُطلق نشراً.
-- **الواجهة (Vercel):** النشر يدوي عبر CLI من جذر المشروع (المشروع مربوط محلياً في `.vercel/`):
+### النشر (مهم — السلوكان مختلفان)
+- **الخادم (Render): نشر تلقائي ✅** — Render مربوط بالمستودع عبر GitHub App (لا يظهر كـ webhook كلاسيكي).
+  أي `git push` على `main` يعيد نشر الخادم تلقائياً (تأكّد عبر `POST /solo` أو `/health`).
+- **الواجهة (Vercel): نشر يدوي ⚠️** — Vercel غير مربوط بالمستودع (مربوط محلياً في `.vercel/` فقط).
+  الدفع لا يَنشر الواجهة؛ انشرها يدوياً من جذر المشروع:
   ```powershell
   $env:NODE_OPTIONS="--use-system-ca"; vercel --prod --yes
   ```
   (متغيّر البيئة ضروري بسبب اعتراض TLS على هذا الجهاز.)
-- **الخادم (Render):** نادراً ما يتغيّر؛ أعِد نشره من لوحة Render («Manual Deploy») عند تغيّر `server/`.
-- **لتفعيل النشر التلقائي مستقبلاً:** اربط المستودع في لوحتَي Vercel و Render (انظر خطوات الربط في سجلّ المحادثة/README).
+- **لتفعيل نشر Vercel التلقائي:** اربط المستودع في لوحة Vercel (Settings → Git).
 
 ## الحالة وما تبقّى (آخر تحديث: 2026-06-04 — حسابات Google + ليدربورد عبر Supabase)
 **تم بالكامل:**
