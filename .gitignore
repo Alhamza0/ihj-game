@@ -2,7 +2,14 @@ node_modules/
 dist/
 .env
 .env.local
+.env.*
 *.log
 .DS_Store
 
 .vercel
+.claude/
+
+# أسرار (لا تُرفع أبداً)
+client_secret*.json
+*service_role*
+secrets/
