@@ -37,11 +37,10 @@ export function buildFields(letter, cats, meta = null) {
     const last = i === chosen.length - 1;
     const f = document.createElement("div");
     f.className = "field";
-    f.innerHTML = `<span class="ic creature">${catCreature(c.id)}</span>` +
-      `<input class="txt" data-c="${c.id}" placeholder="${c.nm} يبدأ بحرف «${letter}»"` +
+    f.innerHTML = `<label class="flabel" for="f-${c.id}"><span class="fic">${catCreature(c.id)}</span>${c.nm}</label>` +
+      `<input class="txt" id="f-${c.id}" data-c="${c.id}" placeholder="يبدأ بحرف «${letter}»"` +
       ` autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="text"` +
-      ` enterkeyhint="${last ? "done" : "next"}">` +
-      `<span class="tag">${c.nm}</span>`;
+      ` enterkeyhint="${last ? "done" : "next"}">`;
     fields.appendChild(f);
   });
 

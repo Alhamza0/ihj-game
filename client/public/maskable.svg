@@ -8,12 +8,7 @@
   </defs>
   <rect width="512" height="512" fill="url(#bg)"/>
   <g fill="#ffffff" font-family="'Baloo Bhaijaan 2','Cairo',sans-serif" font-weight="800" text-anchor="middle">
-    <text x="256" y="245" font-size="118">إ·ح·ج</text>
-  </g>
-  <g fill="none" stroke="#ffffff" stroke-width="12" stroke-linecap="round" opacity="0.9">
-    <path d="M176 312 h160"/>
-  </g>
-  <g fill="#ffffff" font-family="'Cairo',sans-serif" font-weight="700" text-anchor="middle" opacity="0.95">
-    <text x="256" y="372" font-size="46">حروف</text>
+    <text x="256" y="246" font-size="108">لمّة</text>
+    <text x="256" y="368" font-size="108">حروف</text>
   </g>
 </svg>

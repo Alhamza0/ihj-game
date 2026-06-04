@@ -1,9 +1,9 @@
 // ============================ app bootstrap ============================
 import "./style.css";
 import { $, go, toast, esc } from "./dom.js";
-import { wireSeg, renderCatGrid, syncConfigUI, bumpRounds } from "./config.js";
+import { wireSeg, renderCatGrid, syncConfigUI, bumpRounds, toggleAllCats } from "./config.js";
 import { toggleSound, unlockAudio } from "./sound.js";
-import { MASCOT, tile, star } from "./art.js";
+import { MASCOT, mascotSVG, tile, star } from "./art.js";
 import * as local from "./local-game.js";
 import * as net from "./net.js";
 import { authEnabled, onAuthChange, currentUser, signInWithGoogle } from "./auth.js";
@@ -22,6 +22,7 @@ const routes = {
   startLocal: local.startLocal,
   beginTurn: local.beginTurn,
   bumpRounds,
+  toggleAllCats,
   onNextRound: () => net.NET.active ? net.hostNextRound() : local.onNextRound(),
   onPlayAgain: () => net.NET.active ? net.hostPlayAgain() : local.onPlayAgain(),
   onDone: () => (net.NET.active && net.NET.role === "player") ? net.playerDone() : local.endTurn(false),
@@ -38,7 +39,7 @@ Object.assign(window, routes);
 
 async function shareResult() {
   const list = net.NET.active ? net.netShareList() : local.localShareList();
-  let txt = "🏆 نتائج لعبة إنسان · حيوان · جماد\n\n";
+  let txt = "🏆 نتائج لمّة حروف (إنسان · حيوان · جماد)\n\n";
   (list || []).forEach((p, i) => txt += `${["🥇", "🥈", "🥉"][i] || "▫️"} ${p.name}: ${p.score} نقطة\n`);
   txt += "\nالعب أنت أيضاً!";
   try { if (navigator.share) { await navigator.share({ title: "نتيجة اللعبة", text: txt }); return; } } catch (e) {}
@@ -56,6 +57,37 @@ async function shareResult() {
     `<span class="deco d-tile2">${tile("ح", "#3aa0ff")}</span>` +
     `<span class="deco d-tile3">${tile("ج", "#ff8a3d")}</span>` +
     `<div class="mascot-hold">${MASCOT}</div>`;
+})();
+
+// ---- حَرفوش يرافق اللاعب بحالات مختلفة عبر الشاشات (حيوية شاملة) ----
+(function placeMascots() {
+  const put = (sel, mood, cls = "mascot-mini") => {
+    const host = $(sel);
+    if (!host) return;
+    const m = document.createElement("div");
+    m.className = cls;
+    m.innerHTML = mascotSVG(mood);
+    host.insertBefore(m, host.firstChild);
+  };
+  put("#s-reveal .reveal-wrap", "happy", "mascot-mini mascot-reveal");  // كل جولة (محلي + أونلاين)
+  put("#s-pwait .big-wait", "sleep");                       // ينتظر بدء المضيف
+  put("#s-psent .big-wait", "think");                       // يترقّب النتيجة
+  put("#s-pscore .big-wait", "happy");                      // نتيجة اللاعب للجولة
+  put("#s-results .stagger", "celebrate", "mascot-mini mascot-win");  // يحتفل بالفائز
+  const jh = $("#joinHero");                                // شاشة الانضمام
+  if (jh) jh.innerHTML = `<div class="mascot-mini" style="width:110px">${mascotSVG("happy")}</div>`;
+})();
+
+// ---- خلفية حروف عائمة خافتة في كل الشاشات ----
+(function bgTiles() {
+  const wrap = document.createElement("div");
+  wrap.className = "bgtiles";
+  wrap.setAttribute("aria-hidden", "true");
+  wrap.innerHTML =
+    `<span class="bt b1">${tile("أ", "#7b5cff")}</span>` +
+    `<span class="bt b2">${tile("ب", "#3aa0ff")}</span>` +
+    `<span class="bt b3">${tile("ت", "#ff8a3d")}</span>`;
+  document.body.appendChild(wrap);
 })();
 
 // ---- init ----
@@ -127,7 +159,8 @@ function watchUpdates(reg) {
   });
 }
 if ("serviceWorker" in navigator) {
-  const ok = location.protocol === "https:" || ["localhost", "127.0.0.1"].includes(location.hostname);
+  // الإنتاج فقط (HTTPS) — لا نسجّل في التطوير المحلي لتفادي خدمة نسخة مخزّنة قديمة
+  const ok = location.protocol === "https:";
   if (ok) window.addEventListener("load", () => {
     navigator.serviceWorker.addEventListener("controllerchange", () => {
       if (_reloading) return; _reloading = true; location.reload();

@@ -42,6 +42,7 @@ export function setMode(m) {
 
 export function renderPlayers() {
   const wrap = $("#playersList");
+  const pc = $("#playerCount"); if (pc) pc.textContent = toAr(L.players.length);
   wrap.innerHTML = "";
   L.players.forEach((p, i) => {
     const a = av(i);
@@ -94,7 +95,7 @@ export function beginTurn() {
   const p = L.players[L.turn];
   $("#playLetter").textContent = L.letter;
   $("#playWho").textContent = p.nm;
-  $("#playRound").textContent = "الجولة " + toAr(L.round + 1) + " · حرف " + L.letter;
+  $("#playRound").textContent = "الجولة " + toAr(L.round + 1) + " من " + toAr(CFG.rounds);
   buildFields(L.letter, CFG.cats);
   go("s-play");
   toast("هيا " + p.nm + "! اكتب بسرعة 🔥");
@@ -145,7 +146,7 @@ function showLocalScore() {
   $("#scoreLetter").textContent = L.letter;
   $("#scoreRound").textContent = "الجولة " + toAr(L.round + 1);
   $("#scoreHint").classList.remove("hidden");
-  $("#scoreHint").textContent = "١٠ لإجابة فريدة · ٥ إذا تكررت · ٠ إذا خاطئة. اضغط ✗ لإلغاء أي إجابة غير صحيحة.";
+  $("#scoreHint").textContent = "١٠ لإجابة فريدة · ٥ إذا تكررت · ٠ إذا خاطئة. لكل إجابة: ✓ قبول · ✗ رفض.";
   $("#nextRoundBtn").textContent = (L.round + 1 >= CFG.rounds) ? "عرض النتائج 🏆" : "الجولة التالية ←";
   drawScore(res);
   scoreFeedback(buildRows(res));

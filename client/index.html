@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-<title>إنسان · حيوان · جماد</title>
+<title>لمّة حروف — إنسان · حيوان · جماد</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;600;700;800&family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="إ·ح·ج">
+<meta name="apple-mobile-web-app-title" content="لمّة حروف">
 </head>
 <body>
 <!-- ===== custom SVG icon sprite ===== -->
@@ -34,6 +34,8 @@
   <symbol id="ic-share" viewBox="0 0 24 24"><circle cx="6" cy="12" r="2.6"/><circle cx="17.5" cy="5.5" r="2.6"/><circle cx="17.5" cy="18.5" r="2.6"/><path d="M8.3 10.7l6.9-4M8.3 13.3l6.9 4"/></symbol>
   <symbol id="ic-refresh" viewBox="0 0 24 24"><path d="M20 8a8 8 0 00-14-2.3M4 16a8 8 0 0014 2.3"/><path d="M20 3.5V8h-4.5M4 20.5V16h4.5"/></symbol>
   <symbol id="ic-bolt" viewBox="0 0 24 24"><path d="M13 2.5L4.5 13.5H11l-1 8 9.5-12H13l1-7z"/></symbol>
+  <symbol id="ic-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5l3.5 2"/></symbol>
+  <symbol id="ic-grid" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.8"/></symbol>
 </svg>
 
 <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
@@ -44,7 +46,7 @@
 
 <div class="app">
   <div class="topbar">
-    <div class="logo"><span class="dot"></span>إ·ح·ج</div>
+    <div class="logo"><span class="dot"></span>لمّة حروف</div>
     <div class="row" style="gap:8px;width:auto">
       <button class="btn ghost sm auth-btn hidden" id="authBtn" onclick="authAction()"></button>
       <button class="btn ghost sm install-btn hidden" id="installBtn" onclick="installApp()" title="ثبّت التطبيق"><svg class="ic"><use href="#ic-plus"/></svg> ثبّت</button>
@@ -58,7 +60,8 @@
     <div class="hero stagger">
       <div class="kicker">لعبة الحروف العربية الجماعية</div>
       <div class="mascot-scene" id="mascotScene"></div>
-      <h1 class="display">إنسان<i>·</i>حيوان<i>·</i>جماد</h1>
+      <h1 class="display">لمّة حروف</h1>
+      <div class="gamesub">إنسان <i>·</i> حيوان <i>·</i> جماد</div>
       <p>العبوا معاً على شاشة واحدة، أو اعرضوها على التلفاز وانضمّوا من هواتفكم بمسح رمز QR.</p>
     </div>
     <div class="bento stagger">
@@ -95,25 +98,31 @@
         <div class="logo" style="font-size:20px">إعداد اللعب المحلي</div><div style="width:44px"></div>
       </div>
       <div class="card">
-        <span class="label">نمط اللعب</span>
+        <span class="label"><svg class="ic"><use href="#ic-bolt"/></svg> نمط اللعب</span>
         <div class="mode-grid">
           <div class="mode on" id="mode-team" onclick="setMode('team')"><span class="em"><svg class="ic"><use href="#ic-users"/></svg></span><div class="t">فِرق ولاعبون</div><div class="d">تنافس بالتناوب</div></div>
           <div class="mode" id="mode-solo" onclick="setMode('solo')"><span class="em"><svg class="ic"><use href="#ic-bolt"/></svg></span><div class="t">تدريب فردي</div><div class="d">تحدَّ الوقت</div></div>
         </div>
       </div>
       <div class="card" id="playersCard">
-        <span class="label">اللاعبون</span>
+        <span class="label"><svg class="ic"><use href="#ic-users"/></svg> اللاعبون <span class="count" id="playerCount">٢</span></span>
         <div class="players-list" id="playersList"></div>
         <div class="spacer"></div>
         <button class="btn ghost sm" id="addPlayer" onclick="addPlayer()" style="width:100%"><svg class="ic"><use href="#ic-plus"/></svg> إضافة لاعب</button>
       </div>
       <div class="card">
-        <div class="row" style="margin-bottom:16px"><span class="label" style="margin:0">عدد الجولات</span>
+        <div class="row" style="margin-bottom:16px"><span class="label" style="margin:0"><svg class="ic"><use href="#ic-refresh"/></svg> عدد الجولات</span>
           <div class="stepper"><button onclick="bumpRounds(-1)">−</button><b id="roundsVal">3</b><button onclick="bumpRounds(1)">＋</button></div></div>
-        <span class="label">مدة كل جولة</span>
+        <span class="label"><svg class="ic"><use href="#ic-clock"/></svg> مدة كل جولة</span>
         <div class="seg" id="timeSeg"><button data-t="30">٣٠ ثانية</button><button class="on" data-t="60">دقيقة</button><button data-t="90">دقيقة ونصف</button><button data-t="0">بلا مؤقّت</button></div>
       </div>
-      <div class="card"><span class="label">الفئات</span><div class="cat-grid" id="catGrid"></div></div>
+      <div class="card">
+        <div class="row" style="margin-bottom:12px">
+          <span class="label" style="margin:0"><svg class="ic"><use href="#ic-grid"/></svg> الفئات <span class="count" id="catCount">٥</span></span>
+          <button class="btn ghost sm" id="catAll" onclick="toggleAllCats()">تحديد الكل</button>
+        </div>
+        <div class="cat-grid" id="catGrid"></div>
+      </div>
       <button class="btn teal" onclick="startLocal()"><svg class="ic fill"><use href="#ic-play"/></svg> يلّا نلعب</button>
     </div>
   </section>
@@ -150,12 +159,18 @@
     <div class="stagger" style="display:flex;flex-direction:column;gap:16px;flex:1">
       <div class="row"><button class="icon-btn" onclick="go('s-lobby')"><svg class="ic"><use href="#ic-back"/></svg></button><div class="logo" style="font-size:20px">إعدادات الغرفة</div><div style="width:44px"></div></div>
       <div class="card">
-        <div class="row" style="margin-bottom:16px"><span class="label" style="margin:0">عدد الجولات</span>
+        <div class="row" style="margin-bottom:16px"><span class="label" style="margin:0"><svg class="ic"><use href="#ic-refresh"/></svg> عدد الجولات</span>
           <div class="stepper"><button onclick="bumpRounds(-1)">−</button><b id="roundsVal2">3</b><button onclick="bumpRounds(1)">＋</button></div></div>
-        <span class="label">مدة كل جولة</span>
+        <span class="label"><svg class="ic"><use href="#ic-clock"/></svg> مدة كل جولة</span>
         <div class="seg" id="timeSeg2"><button data-t="45">٤٥ ثانية</button><button class="on" data-t="60">دقيقة</button><button data-t="90">دقيقة ونصف</button><button data-t="120">دقيقتان</button></div>
       </div>
-      <div class="card"><span class="label">الفئات</span><div class="cat-grid" id="catGrid2"></div></div>
+      <div class="card">
+        <div class="row" style="margin-bottom:12px">
+          <span class="label" style="margin:0"><svg class="ic"><use href="#ic-grid"/></svg> الفئات <span class="count" id="catCount2">٥</span></span>
+          <button class="btn ghost sm" id="catAll2" onclick="toggleAllCats()">تحديد الكل</button>
+        </div>
+        <div class="cat-grid" id="catGrid2"></div>
+      </div>
       <button class="btn teal" onclick="go('s-lobby')"><svg class="ic"><use href="#ic-check"/></svg> حفظ والرجوع</button>
     </div>
   </section>
@@ -164,7 +179,7 @@
   <section class="screen" id="s-join">
     <div class="stagger" style="display:flex;flex-direction:column;gap:16px;flex:1;justify-content:center">
       <div class="row"><button class="icon-btn" onclick="go('s-home')"><svg class="ic"><use href="#ic-back"/></svg></button><div class="logo" style="font-size:20px">انضمام للعبة</div><div style="width:44px"></div></div>
-      <div class="hero" style="flex:0"><div class="badge join-badge"><svg class="ic"><use href="#ic-phone"/></svg></div></div>
+      <div class="hero" style="flex:0" id="joinHero"></div>
       <div class="card">
         <span class="label">رمز الغرفة</span>
         <input class="txt codeinput" id="joinCode" placeholder="مثال: K7QM" maxlength="5">
@@ -206,8 +221,13 @@
 
   <!-- ===== PLAY (local + phone) ===== -->
   <section class="screen" id="s-play">
-    <div class="play-head">
-      <div class="miniL"><div class="disc" id="playLetter">أ</div><div><small id="playWho">اللاعب</small><b id="playRound">الجولة ١</b></div></div>
+    <div class="letter-banner">
+      <div class="lb-letter" id="playLetter">أ</div>
+      <div class="lb-info">
+        <span class="lb-tag">الحرف المطلوب</span>
+        <b id="playRound">الجولة ١</b>
+        <small id="playWho">اللاعب</small>
+      </div>
       <div class="timer" id="timerWrap">
         <svg width="64" height="64"><circle cx="32" cy="32" r="28" fill="none" stroke="rgba(24,21,39,.1)" stroke-width="6"/>
         <circle id="timerArc" cx="32" cy="32" r="28" fill="none" stroke="url(#tg)" stroke-width="6" stroke-linecap="round" stroke-dasharray="175.9" stroke-dashoffset="0"/>

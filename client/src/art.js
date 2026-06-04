@@ -2,8 +2,40 @@
 // تمائم وشخصيات اللعبة — رسومات SVG مرسومة يدوياً (بلا ملفات خارجية).
 // كلها currentColor-free وألوانها مدمجة، فتعمل أينما وُضعت.
 
-// ---- التميمة الرئيسية: «حَرفوش» مخلوق لطيف ----
-export const MASCOT = `
+// ---- التميمة الرئيسية: «حَرفوش» مخلوق لطيف بحالات تعبير ----
+const eyesOpen = (up = 0) =>
+  `<circle cx="78" cy="112" r="20" fill="#fff"/><circle cx="122" cy="112" r="20" fill="#fff"/>` +
+  `<circle cx="83" cy="${115 - up}" r="10" fill="#2b2358"/><circle cx="117" cy="${115 - up}" r="10" fill="#2b2358"/>` +
+  `<circle cx="87" cy="${111 - up}" r="3.2" fill="#fff"/><circle cx="121" cy="${111 - up}" r="3.2" fill="#fff"/>`;
+const eyesClosed =
+  `<path d="M68 114 q10 9 20 0" stroke="#2b2358" stroke-width="5" stroke-linecap="round" fill="none"/>` +
+  `<path d="M112 114 q10 9 20 0" stroke="#2b2358" stroke-width="5" stroke-linecap="round" fill="none"/>`;
+const spark = (x, y, s, c = "#ffd23f") =>
+  `<path transform="translate(${x} ${y}) scale(${s})" d="M0 -10l2.6 6.3 6.7.7-5 4.6 1.4 6.6-5.7-3.5-5.7 3.5 1.4-6.6-5-4.6 6.7-.7z" fill="${c}"/>`;
+
+const MOODS = {
+  happy: { face: eyesOpen() + `<path d="M84 148 q16 16 32 0" stroke="#2b2358" stroke-width="6" stroke-linecap="round" fill="none"/>` },
+  celebrate: {
+    face: eyesOpen() + `<path d="M86 146 q14 24 28 0z" fill="#2b2358"/><path d="M93 154 q7 7 14 0z" fill="#ff5b6e"/>`,
+    extra: spark(32, 48, 1.2) + spark(170, 56, 1.4, "#23d6c6") + spark(154, 18, 1, "#ff4d97") + spark(24, 110, .9, "#3aa0ff"),
+  },
+  think: {
+    face: eyesOpen(4) + `<circle cx="100" cy="150" r="4" fill="#2b2358"/>`,
+    extra: `<circle cx="150" cy="70" r="5" fill="#fff" stroke="#e3def9" stroke-width="2"/>` +
+      `<circle cx="163" cy="55" r="8" fill="#fff" stroke="#e3def9" stroke-width="2"/>` +
+      `<circle cx="180" cy="34" r="16" fill="#fff" stroke="#e3def9" stroke-width="2"/>` +
+      `<text x="180" y="40" text-anchor="middle" font-family="Cairo,sans-serif" font-weight="800" font-size="18" fill="#7b5cff">؟</text>`,
+  },
+  sleep: {
+    face: eyesClosed + `<path d="M90 150 h20" stroke="#2b2358" stroke-width="5" stroke-linecap="round"/>`,
+    extra: `<g fill="#a98bff" font-family="Baloo Bhaijaan 2,sans-serif" font-weight="800">` +
+      `<text x="148" y="72" font-size="18">z</text><text x="164" y="56" font-size="24">z</text><text x="184" y="38" font-size="30">z</text></g>`,
+  },
+};
+
+export function mascotSVG(mood = "happy") {
+  const m = MOODS[mood] || MOODS.happy;
+  return `
 <svg class="mascot-svg" viewBox="0 0 200 212" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
   <defs>
     <linearGradient id="mBody" x1="0" y1="0" x2="1" y2="1">
@@ -20,14 +52,13 @@ export const MASCOT = `
   <rect x="34" y="58" width="132" height="134" rx="58" fill="url(#mBody)"/>
   <circle cx="64" cy="134" r="11" fill="#ff4d8f" opacity=".5"/>
   <circle cx="136" cy="134" r="11" fill="#ff4d8f" opacity=".5"/>
-  <circle cx="78" cy="112" r="20" fill="#fff"/>
-  <circle cx="122" cy="112" r="20" fill="#fff"/>
-  <circle cx="83" cy="115" r="10" fill="#2b2358"/>
-  <circle cx="117" cy="115" r="10" fill="#2b2358"/>
-  <circle cx="87" cy="111" r="3.2" fill="#fff"/>
-  <circle cx="121" cy="111" r="3.2" fill="#fff"/>
-  <path d="M84 148 q16 16 32 0" stroke="#2b2358" stroke-width="6" stroke-linecap="round" fill="none"/>
+  ${m.face}
+  ${m.extra || ""}
 </svg>`;
+}
+
+// توافق: التميمة الافتراضية السعيدة
+export const MASCOT = mascotSVG("happy");
 
 // ---- دوال زخرفية صغيرة ----
 export const star = (c = "#ffd23f") =>

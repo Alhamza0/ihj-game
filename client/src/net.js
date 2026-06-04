@@ -88,7 +88,7 @@ function wireCommon() {
       buildFields(letter, CFG.cats, { code: P.code, round: P.round, letter });
       $("#playLetter").textContent = letter;
       $("#playWho").textContent = P.name;
-      $("#playRound").textContent = "الجولة " + toAr(P.round + 1) + " · حرف " + letter;
+      $("#playRound").textContent = "الجولة " + toAr(P.round + 1) + " من " + toAr(CFG.rounds);
       go("s-play");
       toast("هيا " + P.name + "! اكتب بسرعة 🔥");
       setTimeout(() => $("#playFields").querySelector("input")?.focus(), 250);
@@ -233,7 +233,7 @@ function renderHostScore({ round, letter, cats, breakdown, totals, speedBonus, i
   const speedHint = speedBonus && Object.values(speedBonus).some(v => v > 0)
     ? " · يشمل مكافأة سرعة عادلة"
     : "";
-  $("#scoreHint").textContent = "اضغط ✗ بجانب أي إجابة خاطئة لإلغائها — تتحدّث النقاط فوراً على هواتف اللاعبين" + speedHint + ".";
+  $("#scoreHint").textContent = "لكل إجابة: ✓ = قبول (نقاط كاملة) · ✗ = رفض (صفر). تتحدّث النقاط فوراً على هواتف اللاعبين" + speedHint + ".";
   $("#nextRoundBtn").textContent = (round + 1 >= CFG.rounds) ? "عرض النتائج 🏆" : "الجولة التالية ←";
 
   renderScoreBody({

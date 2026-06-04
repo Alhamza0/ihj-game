@@ -3,6 +3,7 @@ import { CATS, av, norm, matchLetter } from "@ihj/shared";
 import { $, esc, toAr, go } from "./dom.js";
 import { countUp, crownHTML, burst } from "./fx.js";
 import { sFanfare, sCheer, sTrombone, speakArabicLine } from "./sound.js";
+import { staggerIn, pop } from "./motion.js";
 
 // ---- humorous commentator ----
 const MC_LINES = [
@@ -96,9 +97,15 @@ export function renderScoreBody(opts) {
         `<div class="valwrap"><span class="val ${v ? "" : "empty"}">${v ? esc(v) : "— فارغ —"}</span>` +
         `${q ? `<div class="quip ${q.k}">${q.t}</div>` : ""}</div>` +
         `<span class="pts p${pts}">${pts}</span>` +
-        `${(editable && v) ? `<button class="toggle">${inv ? "✗" : "✓"}</button>` : ""}`;
-      const tg = r.querySelector(".toggle");
-      if (tg && onToggle) tg.onclick = () => onToggle(row.key, c.id);
+        `${(editable && v) ? `<div class="judge">` +
+            `<button class="jbtn ok ${inv ? "" : "on"}" title="قبول">✓</button>` +
+            `<button class="jbtn no ${inv ? "on" : ""}" title="رفض">✗</button>` +
+          `</div>` : ""}`;
+      if (editable && v && onToggle) {
+        const okB = r.querySelector(".jbtn.ok"), noB = r.querySelector(".jbtn.no");
+        if (okB) okB.onclick = () => { if (inv) onToggle(row.key, c.id); };   // قبول: يلغي الرفض
+        if (noB) noB.onclick = () => { if (!inv) onToggle(row.key, c.id); };  // رفض: يصفّر النقاط
+      }
       block.appendChild(r);
     });
     body.appendChild(block);
@@ -131,6 +138,9 @@ export function renderResults(list, solo) {
     lead.appendChild(row);
   });
   go("s-results");
+  pop($("#s-results .mascot-win"), { duration: .7, ease: "back.out(2.2)" });
+  pop($("#winName"), { delay: .1 });
+  staggerIn([...lead.children], { delay: .2 });
   lead.querySelectorAll(".sc").forEach(el => countUp(el, +el.dataset.to, 1100));
   sFanfare();
   if (top?.name) speakArabicLine(`المتصدر حالياً ${top.name} برصيد ${top.score} نقطة`);

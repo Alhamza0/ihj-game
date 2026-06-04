@@ -33,9 +33,27 @@ export function wireSeg(id) {
   });
 }
 
+// تحديث عدّاد الفئات ونصّ زر «تحديد الكل/إعادة الافتراضي» في الشاشتين
+function updateCatMeta() {
+  const n = toAr(CFG.cats.length);
+  const all = CFG.cats.length >= CATS.length;
+  ["catCount", "catCount2"].forEach(i => { const e = $("#" + i); if (e) e.textContent = n; });
+  ["catAll", "catAll2"].forEach(i => { const e = $("#" + i); if (e) e.textContent = all ? "إعادة الافتراضي" : "تحديد الكل"; });
+}
+
+// زر سريع: تحديد كل الفئات، أو العودة للافتراضية إن كانت كلها محدّدة
+export function toggleAllCats() {
+  CFG.cats = CFG.cats.length >= CATS.length
+    ? CATS.filter(c => c.def).map(c => c.id)
+    : CATS.map(c => c.id);
+  renderCatGrid("catGrid");
+  renderCatGrid("catGrid2");
+  changed();
+}
+
 export function renderCatGrid(id) {
   const g = $("#" + id);
-  if (!g) return;
+  if (!g) { updateCatMeta(); return; }
   g.innerHTML = "";
   CATS.forEach(c => {
     const on = CFG.cats.includes(c.id);
@@ -54,6 +72,7 @@ export function renderCatGrid(id) {
     };
     g.appendChild(el);
   });
+  updateCatMeta();
 }
 
 export function syncConfigUI() {
