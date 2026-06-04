@@ -10,14 +10,14 @@ export async function openProfile(pid, fallbackName) {
   list.innerHTML = "";
 
   const [profRes, statsRes, matchesRes] = await Promise.all([
-    sb.from("profiles").select("display_name,avatar_url,created_at").eq("id", pid).single(),
+    sb.from("profiles").select("display_name,avatar_url,created_at").eq("id", pid).limit(1),
     sb.rpc("player_stats", { pid }),
     sb.from("match_players")
       .select("score,placement,is_winner,created_at,matches(player_count,finished_at)")
       .eq("profile_id", pid).order("created_at", { ascending: false }).limit(10),
   ]);
 
-  const prof = profRes.data;
+  const prof = profRes.data && profRes.data[0];
   const name = prof?.display_name || fallbackName || "لاعب";
   const s = (statsRes.data && statsRes.data[0]) || { total_score: 0, games: 0, wins: 0, best_score: 0 };
   const isSelf = currentUser()?.uid === pid;
